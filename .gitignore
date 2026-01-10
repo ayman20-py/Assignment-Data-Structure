@@ -1,0 +1,4 @@
+.\vscode
+
+# Exclude all the .exe files
+**/*.exe
