@@ -7,7 +7,10 @@ Assignment: Data Structures Assignment Task 1
 Component: Reservation & Cancellation (Array Version)
 Date: January 2026
 
-FIXED: Mac-compatible screen clearing + Seating grid after passenger input
+FINAL VERSION - All fixes applied:
+- Mac-compatible screen clearing
+- Seating grid after passenger input
+- Inline input (type on same line as prompt)
 ===============================================================================
 */
 
@@ -90,7 +93,6 @@ void pauseForUserInput()
 
 void clearScreen()
 {
-    // Mac/Linux compatible
     system("clear");
 }
 
@@ -624,7 +626,7 @@ void handleReservation()
 
     cout << "\nAvailable Seats: " << availableSeats << "/" << totalSeats << "\n";
 
-    // Get passenger name
+    // Get passenger name - INLINE INPUT
     string passengerName;
     cout << "\nEnter Passenger Name: ";
     cin.ignore(10000, '\n');
@@ -638,7 +640,7 @@ void handleReservation()
         return;
     }
 
-    // Get passenger class
+    // Get passenger class - INLINE INPUT
     string passengerClass;
     cout << "Enter Class (First/Business/Economy): ";
     getline(cin, passengerClass);
@@ -659,7 +661,7 @@ void handleReservation()
     else if (passengerClass == "ECONOMY")
         passengerClass = "Economy";
 
-    // NOW SHOW SEATING GRID AFTER GETTING PASSENGER INFO
+    // NOW SHOW SEATING GRID
     displaySeatingGrid();
 
     // Get seat row
