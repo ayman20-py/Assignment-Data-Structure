@@ -629,7 +629,6 @@ void handleReservation()
     // Get passenger name - INLINE INPUT
     string passengerName;
     cout << "\nEnter Passenger Name: ";
-    cin.ignore(10000, '\n');
     getline(cin, passengerName);
     passengerName = trimWhitespace(passengerName);
 
@@ -735,7 +734,6 @@ void handleCancellation()
 
     string passengerId;
     cout << "\nEnter Passenger ID to cancel: ";
-    cin.ignore(10000, '\n');
     getline(cin, passengerId);
     passengerId = trimWhitespace(passengerId);
 
