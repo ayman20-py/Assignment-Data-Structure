@@ -2,7 +2,7 @@
 ===============================================================================
 FLIGHT RESERVATION & CANCELLATION SYSTEM - ARRAY VERSION
 ===============================================================================
-Student ID: TP082578
+Student ID: TP079279
 Assignment: Data Structures Assignment Task 1
 Component: Reservation & Cancellation (Array Version)
 Date: January 2026
@@ -42,21 +42,21 @@ using namespace std;
 // Seating grid dimensions (30 rows x 6 columns = 180 seats)
 const int totalRows = 30;
 const int totalColumns = 6;
-const int totalSeats = totalRows * totalColumns; // 180 seats
+const int totalSeats = totalRows * totalColumns;
 
 // Array capacity for passenger storage
-const int maxPassengers = 180; // Maximum passengers that can be stored
+const int maxPassengers = 180;
 
 // Seating grid markers
 const char availableSeatMarker = 'O'; // Open seat
 const char occupiedSeatMarker = 'X';  // Taken seat
 
 // Seat class boundaries (row-based)
-const int firstClassStartRow = 0; // Rows 1-3 (indices 0-2)
+const int firstClassStartRow = 0;
 const int firstClassEndRow = 2;
-const int businessClassStartRow = 3; // Rows 4-10 (indices 3-9)
+const int businessClassStartRow = 3;
 const int businessClassEndRow = 9;
-const int economyClassStartRow = 10; // Rows 11-30 (indices 10-29)
+const int economyClassStartRow = 10;
 const int economyClassEndRow = 29;
 
 // Column labels for seat notation
@@ -69,10 +69,6 @@ const string csvFilePath = "../Dataset/flight_passenger_data.csv.csv";
 // PASSENGER STRUCTURE
 // ============================================================================
 
-/**
- * Structure to store passenger information.
- * Used in the array-based storage system.
- */
 struct Passenger
 {
     string passengerId;    // Unique identifier (e.g., "100000")
@@ -104,35 +100,24 @@ char seatingGrid[totalRows][totalColumns];
 // UTILITY FUNCTIONS - INPUT & VALIDATION
 // ============================================================================
 
-/**
- * Clears the input buffer to prevent cin errors.
- */
 void clearInputBuffer()
 {
     cin.clear();
     cin.ignore(10000, '\n');
 }
 
-/**
- * Pauses execution and waits for user to press Enter.
- */
 void pauseForUserInput()
 {
     cout << "\nPress Enter to continue...";
-    cin.ignore(10000, '\n');
+    cin.sync(); // Clear any pending input
+    cin.get();
 }
 
-/**
- * Clears the terminal screen.
- */
 void clearScreen()
 {
     system("cls"); // Windows-specific
 }
 
-/**
- * Converts a string to uppercase.
- */
 string toUpperCase(const string &input)
 {
     string result = input;
@@ -140,9 +125,6 @@ string toUpperCase(const string &input)
     return result;
 }
 
-/**
- * Trims leading and trailing whitespace from a string.
- */
 string trimWhitespace(const string &input)
 {
     size_t start = input.find_first_not_of(" \t\n\r");
@@ -156,20 +138,12 @@ string trimWhitespace(const string &input)
     return input.substr(start, end - start + 1);
 }
 
-/**
- * Validates passenger class input.
- * Returns true if valid (First, Business, or Economy).
- */
 bool isValidClass(const string &passengerClass)
 {
     string upperClass = toUpperCase(passengerClass);
     return (upperClass == "FIRST" || upperClass == "BUSINESS" || upperClass == "ECONOMY");
 }
 
-/**
- * Converts column letter (A-F) to index (0-5).
- * Returns -1 if invalid.
- */
 int columnLetterToIndex(char columnLetter)
 {
     char upperColumn = toupper(columnLetter);
@@ -180,9 +154,6 @@ int columnLetterToIndex(char columnLetter)
     return -1;
 }
 
-/**
- * Converts column index (0-5) to letter (A-F).
- */
 char columnIndexToLetter(int columnIndex)
 {
     return columnLabels[columnIndex];
@@ -192,10 +163,6 @@ char columnIndexToLetter(int columnIndex)
 // SEATING GRID FUNCTIONS
 // ============================================================================
 
-/**
- * Initializes the seating grid with all seats available.
- * Time Complexity: O(rows × columns) = O(180)
- */
 void initializeSeatingGrid()
 {
     for (int row = 0; row < totalRows; row++)
@@ -207,37 +174,21 @@ void initializeSeatingGrid()
     }
 }
 
-/**
- * Marks a seat as occupied in the seating grid.
- * Time Complexity: O(1) - direct array access
- */
 void allocateSeat(int seatRow, int seatColumn)
 {
     seatingGrid[seatRow][seatColumn] = occupiedSeatMarker;
 }
 
-/**
- * Marks a seat as available in the seating grid.
- * Time Complexity: O(1) - direct array access
- */
 void deallocateSeat(int seatRow, int seatColumn)
 {
     seatingGrid[seatRow][seatColumn] = availableSeatMarker;
 }
 
-/**
- * Checks if a seat is available.
- * Time Complexity: O(1) - direct array access
- */
 bool isSeatAvailable(int seatRow, int seatColumn)
 {
     return seatingGrid[seatRow][seatColumn] == availableSeatMarker;
 }
 
-/**
- * Counts the number of available seats.
- * Time Complexity: O(rows × columns) = O(180)
- */
 int countAvailableSeats()
 {
     int availableCount = 0;
@@ -254,10 +205,6 @@ int countAvailableSeats()
     return availableCount;
 }
 
-/**
- * Displays the seating grid with class sections labeled.
- * Time Complexity: O(rows × columns) = O(180)
- */
 void displaySeatingGrid()
 {
     cout << "\n========================================\n";
@@ -276,16 +223,14 @@ void displaySeatingGrid()
     // Display rows with class labels
     for (int row = 0; row < totalRows; row++)
     {
-        // Row number (1-indexed for display)
+
         cout << setw(2) << (row + 1) << " | ";
 
-        // Seat markers
         for (int column = 0; column < totalColumns; column++)
         {
             cout << seatingGrid[row][column] << "  ";
         }
 
-        // Class label on the right
         if (row >= firstClassStartRow && row <= firstClassEndRow)
         {
             cout << " | FIRST";
@@ -310,10 +255,6 @@ void displaySeatingGrid()
 // ARRAY MANAGEMENT FUNCTIONS
 // ============================================================================
 
-/**
- * Initializes the passenger array with default values.
- * Time Complexity: O(n) where n = maxPassengers = 180
- */
 void initializePassengerArray()
 {
     for (int i = 0; i < maxPassengers; i++)
@@ -328,11 +269,6 @@ void initializePassengerArray()
     activePassengerCount = 0;
 }
 
-/**
- * Searches for a passenger by ID in the array.
- * Returns the index if found, -1 if not found.
- * Time Complexity: O(n) - linear search through active passengers
- */
 int findPassengerByID(const string &passengerId)
 {
     for (int i = 0; i < activePassengerCount; i++)
@@ -345,11 +281,6 @@ int findPassengerByID(const string &passengerId)
     return -1; // Not found
 }
 
-/**
- * Searches for a passenger by seat position.
- * Returns the index if found, -1 if not found.
- * Time Complexity: O(n) - linear search through active passengers
- */
 int findPassengerBySeat(int seatRow, int seatColumn)
 {
     for (int i = 0; i < activePassengerCount; i++)
@@ -364,11 +295,6 @@ int findPassengerBySeat(int seatRow, int seatColumn)
     return -1; // Not found
 }
 
-/**
- * Generates a unique passenger ID.
- * Scans existing IDs and returns the next sequential number.
- * Time Complexity: O(n) - scan all passengers to find max ID
- */
 string generateUniquePassengerID()
 {
     int maxID = 99999; // Starting point
@@ -389,19 +315,6 @@ string generateUniquePassengerID()
     return to_string(newID);
 }
 
-/**
- * ARRAY INSERTION FUNCTION
- * Inserts a new passenger into the array.
- *
- * Time Complexity: O(1) - insert at the end of the array
- *
- * Error Handling:
- * - Array full (capacity reached)
- * - Duplicate passenger ID
- * - Seat already taken
- *
- * Returns: true if successful, false if failed
- */
 bool insertReservation(const string &passengerId, const string &passengerName,
                        int seatRow, int seatColumn, const string &passengerClass)
 {
@@ -451,23 +364,6 @@ bool insertReservation(const string &passengerId, const string &passengerName,
     return true;
 }
 
-/**
- * ARRAY DELETION FUNCTION (WITH SHIFTING)
- * Removes a passenger from the array and shifts remaining elements left.
- *
- * Time Complexity: O(n) - must shift all elements after deleted position
- *
- * Deletion Logic:
- * 1. Find passenger by ID (linear search)
- * 2. Free the allocated seat
- * 3. Shift all passengers after the deleted position left by one
- * 4. Decrement active passenger count
- *
- * Error Handling:
- * - Passenger ID not found
- *
- * Returns: true if successful, false if failed
- */
 bool cancelReservation(const string &passengerId)
 {
 
@@ -477,7 +373,7 @@ bool cancelReservation(const string &passengerId)
     // ERROR CHECK: Passenger not found
     if (passengerIndex == -1)
     {
-        cout << "\n[ERROR] Passenger ID '" << passengerId << "' not found.\n";
+        cout << "\n[ERROR] Passenger ID '" << passengerId << "' not found!\n";
         return false;
     }
 
@@ -511,15 +407,6 @@ bool cancelReservation(const string &passengerId)
     return true;
 }
 
-/**
- * Alternative: LOGICAL DELETION (without shifting)
- * Marks passenger as inactive without shifting array elements.
- *
- * Time Complexity: O(1) - no shifting required
- *
- * Note: This approach is faster but wastes array space.
- * Use when performance is critical and memory is not a concern.
- */
 bool cancelReservationLogical(const string &passengerId)
 {
     int passengerIndex = findPassengerByID(passengerId);
@@ -545,10 +432,6 @@ bool cancelReservationLogical(const string &passengerId)
 // DISPLAY FUNCTIONS
 // ============================================================================
 
-/**
- * Displays all active passengers in a formatted table.
- * Time Complexity: O(n) - iterate through all active passengers
- */
 void displayAllPassengers()
 {
     cout << "\n========================================\n";
@@ -597,11 +480,6 @@ void displayAllPassengers()
 // CSV FILE I/O FUNCTIONS
 // ============================================================================
 
-/**
- * Loads passenger data from CSV file.
- * Handles duplicate seats by keeping the most recent booking.
- * Time Complexity: O(n×m) where n = CSV records, m = active passengers
- */
 bool loadPassengerDataFromCSV()
 {
     ifstream inputFile(csvFilePath);
@@ -679,7 +557,7 @@ bool loadPassengerDataFromCSV()
         }
         catch (...)
         {
-            // Skip malformed records
+
             continue;
         }
     }
@@ -694,11 +572,6 @@ bool loadPassengerDataFromCSV()
     return true;
 }
 
-/**
- * Saves current passenger data to CSV file.
- * Overwrites the file with current state.
- * Time Complexity: O(n) - write all active passengers
- */
 bool savePassengerDataToCSV()
 {
     ofstream outputFile(csvFilePath);
@@ -737,10 +610,6 @@ bool savePassengerDataToCSV()
 // USER INTERACTION FUNCTIONS
 // ============================================================================
 
-/**
- * Handles the reservation process with user input.
- * Time Complexity: O(n) - dominated by ID generation and duplicate checks
- */
 void handleReservation()
 {
     clearScreen();
@@ -771,7 +640,7 @@ void handleReservation()
 
     // Get passenger name
     string passengerName;
-    cout << "\nEnter Passenger Name: ";
+    cout << "\nEnter Passenger Name: " << endl;
     cin.ignore(10000, '\n');
     getline(cin, passengerName);
     passengerName = trimWhitespace(passengerName);
@@ -785,7 +654,7 @@ void handleReservation()
 
     // Get passenger class
     string passengerClass;
-    cout << "Enter Class (First/Business/Economy): ";
+    cout << "Enter Class (First/Business/Economy): " << endl;
     getline(cin, passengerClass);
     passengerClass = trimWhitespace(passengerClass);
 
