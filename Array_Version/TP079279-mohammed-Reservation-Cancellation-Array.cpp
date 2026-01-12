@@ -7,18 +7,7 @@ Assignment: Data Structures Assignment Task 1
 Component: Reservation & Cancellation (Array Version)
 Date: January 2026
 
-Description:
-This program implements a flight reservation and cancellation system using
-ARRAY data structures. It manages passenger bookings with a fixed-size array
-and maintains seat allocation in a 2D seating grid.
-
-Key Features:
-- Array-based passenger storage (fixed capacity)
-- Reservation (insertion) with array management
-- Cancellation (deletion) with array shifting
-- Duplicate ID prevention
-- Seat conflict detection
-- Time complexity analysis included
+FIXED: Mac-compatible screen clearing + Seating grid after passenger input
 ===============================================================================
 */
 
@@ -39,19 +28,14 @@ using namespace std;
 // CONSTANTS & CONFIGURATION
 // ============================================================================
 
-// Seating grid dimensions (30 rows x 6 columns = 180 seats)
 const int totalRows = 30;
 const int totalColumns = 6;
 const int totalSeats = totalRows * totalColumns;
-
-// Array capacity for passenger storage
 const int maxPassengers = 180;
 
-// Seating grid markers
-const char availableSeatMarker = 'O'; // Open seat
-const char occupiedSeatMarker = 'X';  // Taken seat
+const char availableSeatMarker = 'O';
+const char occupiedSeatMarker = 'X';
 
-// Seat class boundaries (row-based)
 const int firstClassStartRow = 0;
 const int firstClassEndRow = 2;
 const int businessClassStartRow = 3;
@@ -59,10 +43,7 @@ const int businessClassEndRow = 9;
 const int economyClassStartRow = 10;
 const int economyClassEndRow = 29;
 
-// Column labels for seat notation
 const string columnLabels = "ABCDEF";
-
-// CSV file path
 const string csvFilePath = "../Dataset/flight_passenger_data.csv.csv";
 
 // ============================================================================
@@ -71,14 +52,13 @@ const string csvFilePath = "../Dataset/flight_passenger_data.csv.csv";
 
 struct Passenger
 {
-    string passengerId;    // Unique identifier (e.g., "100000")
-    string passengerName;  // Full name
-    int seatRow;           // Row index (0-based, 0-29)
-    int seatColumn;        // Column index (0-based, 0-5)
-    string passengerClass; // "First", "Business", or "Economy"
-    bool isActive;         // true = active reservation, false = deleted/empty slot
+    string passengerId;
+    string passengerName;
+    int seatRow;
+    int seatColumn;
+    string passengerClass;
+    bool isActive;
 
-    // Default constructor
     Passenger() : passengerId(""), passengerName(""), seatRow(-1),
                   seatColumn(-1), passengerClass(""), isActive(false) {}
 };
@@ -87,17 +67,12 @@ struct Passenger
 // GLOBAL DATA STRUCTURES
 // ============================================================================
 
-// Array to store passengers (fixed size)
 Passenger passengerArray[maxPassengers];
-
-// Number of active passengers currently in the array
 int activePassengerCount = 0;
-
-// 2D seating grid to track seat availability
 char seatingGrid[totalRows][totalColumns];
 
 // ============================================================================
-// UTILITY FUNCTIONS - INPUT & VALIDATION
+// UTILITY FUNCTIONS
 // ============================================================================
 
 void clearInputBuffer()
@@ -109,13 +84,14 @@ void clearInputBuffer()
 void pauseForUserInput()
 {
     cout << "\nPress Enter to continue...";
-    cin.sync(); // Clear any pending input
+    cin.sync();
     cin.get();
 }
 
 void clearScreen()
 {
-    system("cls"); // Windows-specific
+    // Mac/Linux compatible
+    system("clear");
 }
 
 string toUpperCase(const string &input)
@@ -132,7 +108,7 @@ string trimWhitespace(const string &input)
 
     if (start == string::npos)
     {
-        return ""; // String is all whitespace
+        return "";
     }
 
     return input.substr(start, end - start + 1);
@@ -211,43 +187,71 @@ void displaySeatingGrid()
     cout << "         SEATING GRID (30x6)\n";
     cout << "========================================\n\n";
 
-    // Column headers
     cout << "     ";
     for (int col = 0; col < totalColumns; col++)
     {
-        cout << columnIndexToLetter(col) << "  ";
+        cout << " " << columnIndexToLetter(col) << "  ";
     }
-    cout << "\n";
-    cout << "   ----------------------\n";
+    cout << "\n\n";
 
-    // Display rows with class labels
-    for (int row = 0; row < totalRows; row++)
+    cout << "======== FIRST CLASS (Rows 1-3) ========\n";
+    for (int row = firstClassStartRow; row <= firstClassEndRow; row++)
     {
-
-        cout << setw(2) << (row + 1) << " | ";
-
+        cout << setw(2) << (row + 1) << "   ";
         for (int column = 0; column < totalColumns; column++)
         {
-            cout << seatingGrid[row][column] << "  ";
+            if (seatingGrid[row][column] == availableSeatMarker)
+            {
+                cout << " 0  ";
+            }
+            else
+            {
+                cout << " X  ";
+            }
         }
-
-        if (row >= firstClassStartRow && row <= firstClassEndRow)
-        {
-            cout << " | FIRST";
-        }
-        else if (row >= businessClassStartRow && row <= businessClassEndRow)
-        {
-            cout << " | BUSINESS";
-        }
-        else
-        {
-            cout << " | ECONOMY";
-        }
-
         cout << "\n";
     }
 
-    cout << "\nLegend: O = Available, X = Occupied\n";
+    cout << "\n";
+    cout << "====== BUSINESS CLASS (Rows 4-10) ======\n";
+    for (int row = businessClassStartRow; row <= businessClassEndRow; row++)
+    {
+        cout << setw(2) << (row + 1) << "   ";
+        for (int column = 0; column < totalColumns; column++)
+        {
+            if (seatingGrid[row][column] == availableSeatMarker)
+            {
+                cout << " 0  ";
+            }
+            else
+            {
+                cout << " X  ";
+            }
+        }
+        cout << "\n";
+    }
+
+    cout << "\n";
+    cout << "====== ECONOMY CLASS (Rows 11-30) ======\n";
+    for (int row = economyClassStartRow; row <= economyClassEndRow; row++)
+    {
+        cout << setw(2) << (row + 1) << "   ";
+        for (int column = 0; column < totalColumns; column++)
+        {
+            if (seatingGrid[row][column] == availableSeatMarker)
+            {
+                cout << " 0  ";
+            }
+            else
+            {
+                cout << " X  ";
+            }
+        }
+        cout << "\n";
+    }
+
+    cout << "\n";
+    cout << "Legend: 0 = Available, X = Occupied\n";
     cout << "Total Available Seats: " << countAvailableSeats() << "/" << totalSeats << "\n";
 }
 
@@ -259,12 +263,7 @@ void initializePassengerArray()
 {
     for (int i = 0; i < maxPassengers; i++)
     {
-        passengerArray[i].passengerId = "";
-        passengerArray[i].passengerName = "";
-        passengerArray[i].seatRow = -1;
-        passengerArray[i].seatColumn = -1;
-        passengerArray[i].passengerClass = "";
-        passengerArray[i].isActive = false;
+        passengerArray[i] = Passenger();
     }
     activePassengerCount = 0;
 }
@@ -278,7 +277,7 @@ int findPassengerByID(const string &passengerId)
             return i;
         }
     }
-    return -1; // Not found
+    return -1;
 }
 
 int findPassengerBySeat(int seatRow, int seatColumn)
@@ -292,12 +291,30 @@ int findPassengerBySeat(int seatRow, int seatColumn)
             return i;
         }
     }
-    return -1; // Not found
+    return -1;
+}
+
+int findPassengerByName(const string &passengerName)
+{
+    string searchNameUpper = toUpperCase(passengerName);
+
+    for (int i = 0; i < activePassengerCount; i++)
+    {
+        if (passengerArray[i].isActive)
+        {
+            string storedNameUpper = toUpperCase(passengerArray[i].passengerName);
+            if (storedNameUpper == searchNameUpper)
+            {
+                return i;
+            }
+        }
+    }
+    return -1;
 }
 
 string generateUniquePassengerID()
 {
-    int maxID = 99999; // Starting point
+    int maxID = 99999;
 
     for (int i = 0; i < activePassengerCount; i++)
     {
@@ -318,22 +335,31 @@ string generateUniquePassengerID()
 bool insertReservation(const string &passengerId, const string &passengerName,
                        int seatRow, int seatColumn, const string &passengerClass)
 {
-
-    // ERROR CHECK 1: Array full
     if (activePassengerCount >= maxPassengers)
     {
         cout << "\n[ERROR] Cannot add reservation - array is full (max " << maxPassengers << " passengers).\n";
         return false;
     }
 
-    // ERROR CHECK 2: Duplicate ID
     if (findPassengerByID(passengerId) != -1)
     {
         cout << "\n[ERROR] Passenger ID '" << passengerId << "' already exists.\n";
         return false;
     }
 
-    // ERROR CHECK 3: Seat already taken
+    int duplicateNameIndex = findPassengerByName(passengerName);
+    if (duplicateNameIndex != -1)
+    {
+        cout << "\n[ERROR] A passenger with name '" << passengerName << "' already exists.\n";
+        cout << "Existing passenger details:\n";
+        cout << "  - ID: " << passengerArray[duplicateNameIndex].passengerId << "\n";
+        cout << "  - Seat: " << (passengerArray[duplicateNameIndex].seatRow + 1)
+             << columnIndexToLetter(passengerArray[duplicateNameIndex].seatColumn) << "\n";
+        cout << "  - Class: " << passengerArray[duplicateNameIndex].passengerClass << "\n";
+        cout << "\nPlease use a different name or cancel the existing reservation first.\n";
+        return false;
+    }
+
     if (!isSeatAvailable(seatRow, seatColumn))
     {
         cout << "\n[ERROR] Seat " << (seatRow + 1) << columnIndexToLetter(seatColumn)
@@ -341,7 +367,6 @@ bool insertReservation(const string &passengerId, const string &passengerName,
         return false;
     }
 
-    // INSERTION LOGIC - Add at the end of active passengers
     passengerArray[activePassengerCount].passengerId = passengerId;
     passengerArray[activePassengerCount].passengerName = passengerName;
     passengerArray[activePassengerCount].seatRow = seatRow;
@@ -349,10 +374,7 @@ bool insertReservation(const string &passengerId, const string &passengerName,
     passengerArray[activePassengerCount].passengerClass = passengerClass;
     passengerArray[activePassengerCount].isActive = true;
 
-    // Allocate seat in grid
     allocateSeat(seatRow, seatColumn);
-
-    // Increment active count
     activePassengerCount++;
 
     cout << "\n[SUCCESS] Reservation added successfully!\n";
@@ -366,36 +388,26 @@ bool insertReservation(const string &passengerId, const string &passengerName,
 
 bool cancelReservation(const string &passengerId)
 {
-
-    // STEP 1: Find passenger by ID
     int passengerIndex = findPassengerByID(passengerId);
 
-    // ERROR CHECK: Passenger not found
     if (passengerIndex == -1)
     {
         cout << "\n[ERROR] Passenger ID '" << passengerId << "' not found!\n";
         return false;
     }
 
-    // Store seat information before deletion
     int seatRow = passengerArray[passengerIndex].seatRow;
     int seatColumn = passengerArray[passengerIndex].seatColumn;
     string passengerName = passengerArray[passengerIndex].passengerName;
 
-    // STEP 2: Free the allocated seat
     deallocateSeat(seatRow, seatColumn);
 
-    // STEP 3: SHIFT ELEMENTS LEFT
-    // Time Complexity: O(n) - worst case when deleting first element
     for (int i = passengerIndex; i < activePassengerCount - 1; i++)
     {
         passengerArray[i] = passengerArray[i + 1];
     }
 
-    // STEP 4: Clear the last element (now duplicated)
-    passengerArray[activePassengerCount - 1] = Passenger(); // Reset to default
-
-    // STEP 5: Decrement active count
+    passengerArray[activePassengerCount - 1] = Passenger();
     activePassengerCount--;
 
     cout << "\n[SUCCESS] Reservation cancelled successfully!\n";
@@ -404,27 +416,6 @@ bool cancelReservation(const string &passengerId)
     cout << "Freed Seat: " << (seatRow + 1) << columnIndexToLetter(seatColumn) << "\n";
     cout << "Active Passengers Remaining: " << activePassengerCount << "\n";
 
-    return true;
-}
-
-bool cancelReservationLogical(const string &passengerId)
-{
-    int passengerIndex = findPassengerByID(passengerId);
-
-    if (passengerIndex == -1)
-    {
-        cout << "\n[ERROR] Passenger ID '" << passengerId << "' not found.\n";
-        return false;
-    }
-
-    // Mark as inactive (logical deletion)
-    passengerArray[passengerIndex].isActive = false;
-
-    // Free the seat
-    deallocateSeat(passengerArray[passengerIndex].seatRow,
-                   passengerArray[passengerIndex].seatColumn);
-
-    cout << "\n[SUCCESS] Reservation cancelled (logical deletion).\n";
     return true;
 }
 
@@ -444,14 +435,12 @@ void displayAllPassengers()
         return;
     }
 
-    // Table header
     cout << left << setw(10) << "ID"
          << setw(25) << "Name"
          << setw(8) << "Seat"
          << setw(12) << "Class" << "\n";
     cout << string(55, '-') << "\n";
 
-    // Display each passenger
     for (int i = 0; i < activePassengerCount; i++)
     {
         if (passengerArray[i].isActive)
@@ -459,7 +448,6 @@ void displayAllPassengers()
             string seatNotation = to_string(passengerArray[i].seatRow + 1) +
                                   columnIndexToLetter(passengerArray[i].seatColumn);
 
-            // Truncate long names
             string displayName = passengerArray[i].passengerName;
             if (displayName.length() > 22)
             {
@@ -495,21 +483,18 @@ bool loadPassengerDataFromCSV()
     int lineNumber = 0;
     int recordsLoaded = 0;
     int duplicateSeats = 0;
+    int duplicateNames = 0;
 
-    // Skip header row
     getline(inputFile, line);
     lineNumber++;
 
-    // Read all passenger records
     while (getline(inputFile, line) && activePassengerCount < maxPassengers)
     {
         lineNumber++;
 
-        // Skip empty lines
         if (line.empty())
             continue;
 
-        // Parse CSV line
         stringstream ss(line);
         string passengerId, passengerName, seatRowStr, seatColumnStr, passengerClass;
 
@@ -519,22 +504,19 @@ bool loadPassengerDataFromCSV()
         getline(ss, seatColumnStr, ',');
         getline(ss, passengerClass, ',');
 
-        // Validate and convert data
         try
         {
-            int seatRow = stoi(seatRowStr) - 1; // Convert to 0-indexed
+            int seatRow = stoi(seatRowStr) - 1;
             int seatColumn = columnLetterToIndex(seatColumnStr[0]);
 
             if (seatRow < 0 || seatRow >= totalRows || seatColumn < 0 || seatColumn >= totalColumns)
             {
-                continue; // Skip invalid seat
+                continue;
             }
 
-            // Check if seat already has a passenger (keep most recent)
             int existingIndex = findPassengerBySeat(seatRow, seatColumn);
             if (existingIndex != -1)
             {
-                // Replace with newer booking
                 passengerArray[existingIndex].passengerId = passengerId;
                 passengerArray[existingIndex].passengerName = passengerName;
                 passengerArray[existingIndex].passengerClass = passengerClass;
@@ -542,7 +524,15 @@ bool loadPassengerDataFromCSV()
             }
             else
             {
-                // Add new passenger
+                int duplicateNameIndex = findPassengerByName(passengerName);
+                if (duplicateNameIndex != -1)
+                {
+                    cout << "[WARNING] Skipping passenger '" << passengerName
+                         << "' (ID: " << passengerId << ") - duplicate name.\n";
+                    duplicateNames++;
+                    continue;
+                }
+
                 passengerArray[activePassengerCount].passengerId = passengerId;
                 passengerArray[activePassengerCount].passengerName = passengerName;
                 passengerArray[activePassengerCount].seatRow = seatRow;
@@ -557,7 +547,6 @@ bool loadPassengerDataFromCSV()
         }
         catch (...)
         {
-
             continue;
         }
     }
@@ -567,6 +556,7 @@ bool loadPassengerDataFromCSV()
     cout << "\n[SUCCESS] CSV data loaded.\n";
     cout << "Records Loaded: " << recordsLoaded << "\n";
     cout << "Duplicate Seats Replaced: " << duplicateSeats << "\n";
+    cout << "Duplicate Names Skipped: " << duplicateNames << "\n";
     cout << "Active Passengers: " << activePassengerCount << "\n";
 
     return true;
@@ -582,10 +572,8 @@ bool savePassengerDataToCSV()
         return false;
     }
 
-    // Write header
     outputFile << "PassengerID,Name,SeatRow,SeatColumn,Class\n";
 
-    // Write all active passengers
     for (int i = 0; i < activePassengerCount; i++)
     {
         if (passengerArray[i].isActive)
@@ -617,7 +605,6 @@ void handleReservation()
     cout << "          NEW RESERVATION\n";
     cout << "========================================\n";
 
-    // Check if array is full
     if (activePassengerCount >= maxPassengers)
     {
         cout << "\n[ERROR] Cannot add reservation - flight is fully booked!\n";
@@ -627,7 +614,6 @@ void handleReservation()
         return;
     }
 
-    // Check available seats
     int availableSeats = countAvailableSeats();
     if (availableSeats == 0)
     {
@@ -640,7 +626,7 @@ void handleReservation()
 
     // Get passenger name
     string passengerName;
-    cout << "\nEnter Passenger Name: " << endl;
+    cout << "\nEnter Passenger Name: ";
     cin.ignore(10000, '\n');
     getline(cin, passengerName);
     passengerName = trimWhitespace(passengerName);
@@ -654,7 +640,7 @@ void handleReservation()
 
     // Get passenger class
     string passengerClass;
-    cout << "Enter Class (First/Business/Economy): " << endl;
+    cout << "Enter Class (First/Business/Economy): ";
     getline(cin, passengerClass);
     passengerClass = trimWhitespace(passengerClass);
 
@@ -665,7 +651,6 @@ void handleReservation()
         return;
     }
 
-    // Normalize class name
     passengerClass = toUpperCase(passengerClass);
     if (passengerClass == "FIRST")
         passengerClass = "First";
@@ -674,7 +659,7 @@ void handleReservation()
     else if (passengerClass == "ECONOMY")
         passengerClass = "Economy";
 
-    // Display seating grid
+    // NOW SHOW SEATING GRID AFTER GETTING PASSENGER INFO
     displaySeatingGrid();
 
     // Get seat row
@@ -696,7 +681,7 @@ void handleReservation()
         return;
     }
 
-    seatRow--; // Convert to 0-indexed
+    seatRow--;
 
     // Get seat column
     char seatColumnLetter;
@@ -712,10 +697,8 @@ void handleReservation()
         return;
     }
 
-    // Generate unique passenger ID
     string passengerId = generateUniquePassengerID();
 
-    // Attempt insertion
     bool success = insertReservation(passengerId, passengerName, seatRow, seatColumn, passengerClass);
 
     if (success)
@@ -732,10 +715,6 @@ void handleReservation()
     pauseForUserInput();
 }
 
-/**
- * Handles the cancellation process with user input.
- * Time Complexity: O(n) - dominated by array shifting in deletion
- */
 void handleCancellation()
 {
     clearScreen();
@@ -750,10 +729,8 @@ void handleCancellation()
         return;
     }
 
-    // Display current passengers
     displayAllPassengers();
 
-    // Get passenger ID to cancel
     string passengerId;
     cout << "\nEnter Passenger ID to cancel: ";
     cin.ignore(10000, '\n');
@@ -767,7 +744,6 @@ void handleCancellation()
         return;
     }
 
-    // Attempt deletion (with shifting)
     bool success = cancelReservation(passengerId);
 
     if (success)
@@ -784,15 +760,12 @@ void handleCancellation()
 // MAIN MENU & PROGRAM CONTROL
 // ============================================================================
 
-/**
- * Displays the main menu.
- */
 void displayMainMenu()
 {
     cout << "\n========================================\n";
     cout << "  FLIGHT RESERVATION SYSTEM (ARRAY)\n";
     cout << "========================================\n";
-    cout << "  Student ID: TP082578\n";
+    cout << "  Student ID: TP079279\n";
     cout << "  Active Passengers: " << activePassengerCount << "/" << maxPassengers << "\n";
     cout << "  Available Seats: " << countAvailableSeats() << "/" << totalSeats << "\n";
     cout << "========================================\n\n";
@@ -804,16 +777,11 @@ void displayMainMenu()
     cout << "Enter your choice (1-5): ";
 }
 
-/**
- * Main program entry point.
- */
 int main()
 {
-    // Initialize data structures
     initializePassengerArray();
     initializeSeatingGrid();
 
-    // Load existing data from CSV
     cout << "========================================\n";
     cout << "  FLIGHT RESERVATION SYSTEM - ARRAY\n";
     cout << "========================================\n\n";
@@ -823,7 +791,6 @@ int main()
 
     pauseForUserInput();
 
-    // Main program loop
     int choice;
     bool running = true;
 
