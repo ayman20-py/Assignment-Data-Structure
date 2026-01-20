@@ -51,6 +51,9 @@ PassengerLinkedList readPassengerCSV() {
 
     string currentLine;
     int totalRecordsRead = 0;
+    int currentPlaneIndex = 1;
+    int newPlaneIndex = currentPlaneIndex;
+    int totalPlanes = -11111;
 
     // Skip the header line
     getline(csvInputFile, currentLine);
@@ -73,11 +76,24 @@ PassengerLinkedList readPassengerCSV() {
         int seatRow = stoi(seatRowString) - 1;
         int seatColumn = convertColumnCharToIndex(seatColumnString[0]);
 
-        // Appending all of the data into the linked list
-        passengerLinkedList.append(passengerId, passengerName, seatRow, seatColumn, 1, passengerClass);
+        // This will check whether is already someone in that seat
+        // if there is then the algorithm will keep on increasing the plane index
+        // until the seat on the plane is free
+        while (passengerLinkedList.isSeatOccupied(seatRow, seatColumn, newPlaneIndex)) {
+            newPlaneIndex++;
+        }
+
+        // Just to see how many planes are there in total
+        if (newPlaneIndex > totalPlanes) { 
+            totalPlanes = newPlaneIndex;
+        }
+        // Initializing the data of the linked list
+        passengerLinkedList.init(passengerId, passengerName, seatRow, seatColumn, newPlaneIndex, passengerClass);
+        newPlaneIndex = currentPlaneIndex;
        
     }
     csvInputFile.close();
+    cout << "Total Number of planes: " << totalPlanes << endl;
 
     return passengerLinkedList;
 }

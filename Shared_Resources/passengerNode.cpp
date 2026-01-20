@@ -14,13 +14,13 @@ struct PassengerNode {
     PassengerNode* next;
 
     // Constructor to initialize a passenger node with provided details.
-    PassengerNode(string id, string name, int row, int column, int planeNum, string passengerClassType = "Economy") {
+    PassengerNode(string id, string name, int row, int column, int planeNumber, string passengerClassType = "Economy") {
         passengerId = id;
         passengerName = name;
         seatRow = row;
         seatColumn = column;
         passengerClass = passengerClassType;
-        planeNum = planeNum;
+        planeNum = planeNumber;
         next = nullptr;
     }
 };
@@ -34,7 +34,7 @@ public:
         head = nullptr;
     }
 
-    void append(string id, string name, int row, int column, int planeNum, string passengerClassType = "Economy") {
+    void init(string id, string name, int row, int column, int planeNum, string passengerClassType = "Economy") {
         PassengerNode* newNode = new PassengerNode(id, name, row, column, planeNum, passengerClassType);
 
         if (head == nullptr) {
@@ -62,4 +62,43 @@ public:
         }
         return count;
     }
+
+    bool doesPassengerExists(string id) {
+        PassengerNode* current = head;
+
+        while (current != nullptr) {
+            if (current->passengerId == id) {
+                return true;
+            }
+            current = current->next;
+        }
+
+        return false;
+    }
+
+    bool isSeatOccupied(int seatRow, int columnChar, int planeNumber) {
+        PassengerNode* current = head;
+        
+        while (current != nullptr) {
+            if (current->seatRow == seatRow && current->seatColumn == columnChar && current->planeNum == planeNumber) {
+                // cout << "Seat already occupied on Row: " << seatRow << " Col: " << columnChar << " on plane " << planeNumber<< endl;
+                return true;
+            }
+            current = current->next;
+        }
+        return false;
+    }
+
+    void displayAll() {
+        PassengerNode* current = head;
+        int index = 0;
+
+        while (current != nullptr) {
+            cout << current->passengerId << ". " << current->passengerName << " | " << "Passenger Class: " << current->passengerClass << " | Plane number: " << current->planeNum << endl;
+            current = current->next;
+            index++;
+        }
+
+    }
+
 };
