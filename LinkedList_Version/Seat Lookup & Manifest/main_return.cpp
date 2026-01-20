@@ -1,11 +1,15 @@
 #include <string>
-#include "../passengerNode.cpp"
+#include <iostream>
+#include "..\..\Shared_Resources\passengerNode.cpp"
+#include "..\..\Shared_Resources\passengerRepo.cpp"
 
 using namespace std;
 
 int main() {
 
-    PassengerNode x = PassengerNode("1", "John Doe", 5, 3, "Economy", true);
+    PassengerLinkedList passengerLinkedList;
+    passengerLinkedList = readPassengerCSV();
 
+    cout << "Size of the linked list: " << passengerLinkedList.getSize() << endl;;
     return 0;
 }

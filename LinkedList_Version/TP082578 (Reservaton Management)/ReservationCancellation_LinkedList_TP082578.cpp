@@ -15,7 +15,7 @@ using namespace std;
    =========================================================== */
 
 // CSV file path for flight passenger data.
-const string csvFilePath = "..\\..\\Assignment\\flight_passenger_data.csv.csv";
+const string csvFilePath = "C:\\Users\\User\\Dev\\C++\\Assignment-Data-Structure\\Dataset\\flight_passenger_data.csv.csv";
 
 // Seating grid dimensions for the airplane.
 const int totalRows = 30;

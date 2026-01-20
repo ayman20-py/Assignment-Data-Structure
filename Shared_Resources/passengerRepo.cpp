@@ -1,81 +1,83 @@
 #include <iostream>
 #include <fstream>
-
+#include <sstream>
+#include ".\passengerNode.cpp"
 using namespace std;
 
-//  A function cannot directly return a 2D array
-// Need to create a struct to hold it and then return it as a struct
-struct StringMatrix {
-    std::string data[10000][5];
+// System constants
+const string csvFilePath = "C:\\Users\\User\\Dev\\C++\\Assignment-Data-Structure\\Dataset\\flight_passenger_data.csv.csv";
+const int totalRows = 30;
+const int totalColumns = 6;
+
+const char availableSeatMarker = 'O';
+const char occupiedSeatMarker = 'X';
+
+struct SeatBookingInfo {
+    string passengerId;
+    string passengerName;
+    string passengerClass;
+    bool isOccupied;
 };
 
-StringMatrix getPassengersArray() {
+SeatBookingInfo mostRecentBookings[totalRows][totalColumns];
 
-    string filepath = "C:\\Users\\User\\Dev\\C++\\Assignment-Data-Structure\\Dataset\\flight_passenger_data.csv.csv";
-    ifstream iFile;
+struct PassengerCSV{
+    string passengerID;
+    string name;
+    int seatRow;
+    char searCol;
+    string pClass;
+};
 
-    iFile.open(filepath);
-    string line = "";
-
-    getline(iFile, line); // Bypass Header line
-
-    int index = 0;
-
-    string id, name, seatRow, seatColumn, seatClass;
-    int sepLocator;
-
-    StringMatrix passengerArray;
-    
-
-    int currentRow = 0;
-    int currentColumn = 0;
-
-    while (getline(iFile, line))
-    {
-        id = getNextItem(line)[0];
-        line = getNextItem(line)[1];
-
-        name = getNextItem(line)[0];
-        line = getNextItem(line)[1];
-
-        seatRow = getNextItem(line)[0];
-        line = getNextItem(line)[1];
-
-        seatColumn = getNextItem(line)[0];
-        line = getNextItem(line)[1];
-
-        seatClass = getNextItem(line)[0];
-        line = getNextItem(line)[1];
-
-        // setting the values in the array
-        passengerArray.data[currentRow][0] = id;
-        passengerArray.data[currentRow][1] = name;
-        passengerArray.data[currentRow][2] = seatRow;
-        passengerArray.data[currentRow][3] = seatColumn;
-        passengerArray.data[currentRow][4] = seatClass;
-        currentRow++;
-
-    }
-    iFile.close();
-
-    return passengerArray;
+int convertColumnCharToIndex(char columnChar) {
+    return columnChar - 'A';
 }
 
-string* getNextItem(string line) {
-    static string returnData[2];
+PassengerLinkedList readPassengerCSV() {
+    ifstream csvInputFile(csvFilePath);
+    PassengerLinkedList passengerLinkedList;
 
-    int sepLocator = line.find(",");
-    string element = line.substr(0, sepLocator);
-    string newline = line.substr(sepLocator+1, line.length());
+    if (!csvInputFile.is_open()) {
+        cout << "Could not open the file: " << csvFilePath << endl;
+        return passengerLinkedList;
+    }
 
-    returnData[0] = element;
-    returnData[1] = newline;
+    // Initializing the mostRecentBookings array to all seats available
+    for (int rowIndex =0; rowIndex < totalRows; rowIndex++){
+        for (int columnIndex=0; columnIndex < totalColumns; columnIndex++) {
+            mostRecentBookings[rowIndex][columnIndex].isOccupied = false;
+        }
+    }
 
-    return returnData;
-} 
+    string currentLine;
+    int totalRecordsRead = 0;
 
+    // Skip the header line
+    getline(csvInputFile, currentLine);
 
-int main() {
-    StringMatrix x = getPassengersArray();
-    // cout << x.data[4000][1] << endl;  checking if the array has been populated correctly
+    while(getline(csvInputFile, currentLine)) {
+        stringstream lineStream(currentLine);
+        string passengerId;
+        string passengerName; 
+        string seatRowString;
+        string seatColumnString;
+        string passengerClass;
+
+        getline(lineStream, passengerId, ',');
+        getline(lineStream, passengerName, ',');
+        getline(lineStream, seatRowString, ',');
+        getline(lineStream, seatColumnString, ',');
+        getline(lineStream, passengerClass, ',');
+
+        // Convert seat row to int and making it as index
+        int seatRow = stoi(seatRowString) - 1;
+        int seatColumn = convertColumnCharToIndex(seatColumnString[0]);
+
+        // Appending all of the data into the linked list
+        passengerLinkedList.append(passengerId, passengerName, seatRow, seatColumn, 1, passengerClass);
+       
+    }
+    csvInputFile.close();
+
+    return passengerLinkedList;
 }
