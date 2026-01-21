@@ -9,6 +9,7 @@ PassengerLinkedList passengerLinkedList;
 const char availableSeatMarker = 'O';
 const char occupiedSeatMarker = 'X';
 
+// This function will return either 'O' or 'X' depending if the seat being checked is available or not
 char checkOccupiedSeat(PassengerNode passenger) {
     if (passenger.passengerName != "") {
         return occupiedSeatMarker;
@@ -17,8 +18,10 @@ char checkOccupiedSeat(PassengerNode passenger) {
 
 }
 
+// This function will only check the seating grid of a single plane at time
+// Since there are a total of 79 planes there is an estimate of 2,700 lines
+// which can be really hard to be readable on a terminal based interface.
 void linkedListSeatManifest(int currentPlane) {
-    int totalPlanes = 79;
     PassengerNode passengerList[30][6];
 
     // Populating the passengerList 2D array
@@ -32,6 +35,7 @@ void linkedListSeatManifest(int currentPlane) {
         cout << " " << convertColumnIndexToChar(columnIndex) << "  ";
     }
     cout << endl;
+    // Rendering the first class passengers
     cout << "---------- First Class (Rows 1 - 3) ----------" << endl;
     for (int rowIndex=0; rowIndex<3; rowIndex++) {
         cout << (rowIndex+1) << "   ";
@@ -41,6 +45,7 @@ void linkedListSeatManifest(int currentPlane) {
         }
         cout << endl;
     }
+    // Rendering the bussiness class passengers
     cout << "---------- Business Class (Rows 4 - 10) ----------" << endl;
     for (int rowIndex=3; rowIndex<10; rowIndex++) {
         if ((rowIndex+1) == 10) {
@@ -52,6 +57,7 @@ void linkedListSeatManifest(int currentPlane) {
         }
         cout << endl;
     }
+    // Rendering the economy class passengers
     cout << "---------- Economy Class (Rows 11 - 30) ----------" << endl;
     for (int rowIndex=10; rowIndex<30; rowIndex++) {
         cout << (rowIndex+1) << "  ";
