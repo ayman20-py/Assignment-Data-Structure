@@ -21,7 +21,7 @@ char checkOccupiedSeat(PassengerNode passenger) {
 // This function will only check the seating grid of a single plane at time
 // Since there are a total of 79 planes there is an estimate of 2,700 lines
 // which can be really hard to be readable on a terminal based interface.
-void linkedListSeatManifest(int currentPlane) {
+void linkedListSeatingGrid(int currentPlane) {
     PassengerNode passengerList[30][6];
 
     // Populating the passengerList 2D array
@@ -67,10 +67,16 @@ void linkedListSeatManifest(int currentPlane) {
         }
         cout << endl;
     }
+
+    cout << "-------Legend--------" << endl;
+    cout << "Occupied Seat: " << occupiedSeatMarker << endl;
+    cout << "Available Seat: " << availableSeatMarker << endl;
 }
 
 int main() {
     passengerLinkedList = readPassengerCSV();
-    linkedListSeatManifest(12);
+
+    // linkedListSeatingGrid(67);
+    passengerLinkedList.displayAllPassengers();
     return 0;
 }

@@ -1,6 +1,7 @@
 #pragma once
 #include <iostream>
 #include <string>
+#include <string>
 #include <array>
 using namespace std;
 
@@ -30,6 +31,15 @@ struct PassengerNode {
         next = nullptr;
     }
 };
+
+int PassengerconvertColumnCharToIndex(char columnChar) {
+    return columnChar - 'A';
+}
+
+// This function converts a zero-based column index (0-5) to a seat column character (A-F).
+char PassengerconvertColumnIndexToChar(int columnIndex) {
+    return 'A' + columnIndex;
+}
 
 
 class PassengerLinkedList {
@@ -94,18 +104,22 @@ public:
         return false;
     }
 
-    void displayAll() {
+    void displayAllPassengers() {
         PassengerNode* current = head;
-        int index = 0;
 
+        cout << "==========PASSENGER MANIFEST==========" << endl;
+        cout << "ID        Name                     Seat     Class" << endl;
         while (current != nullptr) {
-            cout << current->passengerId << ". " << current->passengerName << " | " << "Passenger Class: " << current->passengerClass << " | Plane number: " << current->planeNum << endl;
-            current = current->next;
-            index++;
+            cout << current->passengerId << "    ";
+            cout << current->passengerName << string(25 - current->passengerName.length(), ' ');
+            cout << (current->seatRow+ 1)<< PassengerconvertColumnIndexToChar(current->seatColumn) << string(8 - to_string(current->seatRow).length(), ' ');
+            cout << current->passengerClass;
+            cout << endl;
+
+            current = current -> next;
         }
 
     }
-
 
     // This function will return a 2D array containing the passengers in a specific plane number
     void getPassengersFromPlane(PassengerNode passengerList[][6], int planeNumber) {
