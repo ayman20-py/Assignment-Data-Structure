@@ -1,6 +1,7 @@
 #pragma once
 #include <iostream>
 #include <string>
+#include <array>
 using namespace std;
 
 // This structure represents a single passenger reservation node in the linked list.
@@ -12,6 +13,11 @@ struct PassengerNode {
     int planeNum;
     string passengerClass;
     PassengerNode* next;
+
+    // ADD THIS DEFAULT CONSTRUCTOR
+        PassengerNode() 
+            : passengerId(""), passengerName(""), seatRow(0), seatColumn(0), 
+            planeNum(0), passengerClass(""), next(nullptr) {}
 
     // Constructor to initialize a passenger node with provided details.
     PassengerNode(string id, string name, int row, int column, int planeNumber, string passengerClassType = "Economy") {
@@ -81,7 +87,6 @@ public:
         
         while (current != nullptr) {
             if (current->seatRow == seatRow && current->seatColumn == columnChar && current->planeNum == planeNumber) {
-                // cout << "Seat already occupied on Row: " << seatRow << " Col: " << columnChar << " on plane " << planeNumber<< endl;
                 return true;
             }
             current = current->next;
@@ -99,6 +104,19 @@ public:
             index++;
         }
 
+    }
+
+
+    // This function will return a 2D array containing the passengers in a specific plane number
+    void getPassengersFromPlane(PassengerNode passengerList[][6], int planeNumber) {
+        PassengerNode* current = head;
+
+        while (current != nullptr) {
+            if (current->planeNum == planeNumber) {
+                passengerList[current->seatRow][current->seatColumn] = *current;
+            }
+            current = current->next;
+        }
     }
 
 };

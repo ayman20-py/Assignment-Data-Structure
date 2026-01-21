@@ -9,8 +9,6 @@ const string csvFilePath = "C:\\Users\\User\\Dev\\C++\\Assignment-Data-Structure
 const int totalRows = 30;
 const int totalColumns = 6;
 
-const char availableSeatMarker = 'O';
-const char occupiedSeatMarker = 'X';
 
 struct SeatBookingInfo {
     string passengerId;
@@ -31,6 +29,11 @@ struct PassengerCSV{
 
 int convertColumnCharToIndex(char columnChar) {
     return columnChar - 'A';
+}
+
+// This function converts a zero-based column index (0-5) to a seat column character (A-F).
+char convertColumnIndexToChar(int columnIndex) {
+    return 'A' + columnIndex;
 }
 
 PassengerLinkedList readPassengerCSV() {
