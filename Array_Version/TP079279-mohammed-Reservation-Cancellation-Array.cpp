@@ -550,245 +550,6 @@ bool cancelReservation(const string &passengerId)
 // DISPLAY FUNCTIONS
 // ============================================================================
 
-void displayPlaneSeatingGrid(int planeIndex)
-{
-    cout << "\n========================================\n";
-    cout << "    PLANE #" << (planeIndex + 1) << " SEATING GRID\n";
-    cout << "========================================\n\n";
-
-    cout << "     ";
-    for (int col = 0; col < COLUMNS_PER_PLANE; col++)
-        cout << " " << columnIndexToLetter(col) << "  ";
-    cout << "\n\n";
-
-    // FIRST CLASS (Rows 1-3)
-    cout << "======== FIRST CLASS (Rows 1-3) ========\n";
-    for (int row = 0; row <= 2; row++)
-    {
-        cout << setw(2) << (row + 1) << "   ";
-        for (int col = 0; col < COLUMNS_PER_PLANE; col++)
-            cout << (planes[planeIndex].seatingGrid[row][col] == AVAILABLE_SEAT ? " 0  " : " X  ");
-        cout << "\n";
-    }
-
-    cout << "\n";
-
-    // BUSINESS CLASS (Rows 4-10)
-    cout << "====== BUSINESS CLASS (Rows 4-10) ======\n";
-    for (int row = 3; row <= 9; row++)
-    {
-        cout << setw(2) << (row + 1) << "   ";
-        for (int col = 0; col < COLUMNS_PER_PLANE; col++)
-            cout << (planes[planeIndex].seatingGrid[row][col] == AVAILABLE_SEAT ? " 0  " : " X  ");
-        cout << "\n";
-    }
-
-    cout << "\n";
-
-    // ECONOMY CLASS (Rows 11-30)
-    cout << "====== ECONOMY CLASS (Rows 11-30) ======\n";
-    for (int row = 10; row <= 29; row++)
-    {
-        cout << setw(2) << (row + 1) << "   ";
-        for (int col = 0; col < COLUMNS_PER_PLANE; col++)
-            cout << (planes[planeIndex].seatingGrid[row][col] == AVAILABLE_SEAT ? " 0  " : " X  ");
-        cout << "\n";
-    }
-
-    cout << "\n";
-    cout << "Legend: 0 = Available, X = Occupied\n";
-}
-
-void displayAllPlanes()
-{
-    clearScreen();
-    cout << "\n========================================\n";
-    cout << "         ALL PLANES OVERVIEW\n";
-    cout << "========================================\n\n";
-
-    cout << "Total Planes: " << activePlaneCount << "\n";
-    cout << "Total Passengers: " << getTotalPassengers() << "\n";
-    cout << "Total Available Seats: " << getTotalAvailableSeats() << "\n\n";
-
-    cout << left << setw(8) << "Plane #"
-         << setw(12) << "Passengers"
-         << setw(12) << "Available"
-         << setw(10) << "First"
-         << setw(10) << "Business"
-         << setw(10) << "Economy"
-         << setw(12) << "Status" << "\n";
-    cout << string(74, '-') << "\n";
-
-    for (int i = 0; i < activePlaneCount; i++)
-    {
-        if (planes[i].isActive)
-        {
-            int available = SEATS_PER_PLANE - planes[i].activePassengerCount;
-            int firstAvail = countAvailableSeatsInClass(i, "First");
-            int businessAvail = countAvailableSeatsInClass(i, "Business");
-            int economyAvail = countAvailableSeatsInClass(i, "Economy");
-            string status = (available == 0) ? "FULL" : "AVAILABLE";
-
-            cout << left << setw(8) << (i + 1)
-                 << setw(12) << planes[i].activePassengerCount
-                 << setw(12) << available
-                 << setw(10) << firstAvail
-                 << setw(10) << businessAvail
-                 << setw(10) << economyAvail
-                 << setw(12) << status << "\n";
-        }
-    }
-
-    cout << "\n[INFO] First: Rows 1-3 | Business: Rows 4-10 | Economy: Rows 11-30\n";
-
-    pauseForUserInput();
-}
-
-void displayPlanePassengers(int planeIndex)
-{
-    cout << "\n========================================\n";
-    cout << "    PLANE #" << (planeIndex + 1) << " PASSENGERS\n";
-    cout << "========================================\n\n";
-
-    if (planes[planeIndex].activePassengerCount == 0)
-    {
-        cout << "No passengers on this plane.\n";
-        return;
-    }
-
-    cout << left << setw(10) << "ID"
-         << setw(25) << "Name"
-         << setw(8) << "Seat"
-         << setw(12) << "Class" << "\n";
-    cout << string(55, '-') << "\n";
-
-    for (int i = 0; i < planes[planeIndex].activePassengerCount; i++)
-    {
-        if (planes[planeIndex].passengers[i].isActive)
-        {
-            Passenger &p = planes[planeIndex].passengers[i];
-            string seatNotation = to_string(p.seatRow + 1) + columnIndexToLetter(p.seatColumn);
-
-            cout << left << setw(10) << p.passengerId
-                 << setw(25) << p.passengerName
-                 << setw(8) << seatNotation
-                 << setw(12) << p.passengerClass << "\n";
-        }
-    }
-
-    cout << "\nTotal: " << planes[planeIndex].activePassengerCount << "/" << SEATS_PER_PLANE << "\n";
-}
-
-void displayAllPassengers()
-{
-    clearScreen();
-    cout << "\n========================================\n";
-    cout << "    ALL PASSENGERS (ALL PLANES)\n";
-    cout << "========================================\n\n";
-
-    int totalCount = 0;
-    bool hasPassengers = false;
-    int planesDisplayed = 0;
-    bool userWantsToQuit = false;
-
-    // Loop through all planes
-    for (int p = 0; p < activePlaneCount; p++)
-    {
-        if (!planes[p].isActive || planes[p].activePassengerCount == 0)
-            continue;
-
-        hasPassengers = true;
-
-        cout << "\n╔════════════════════════════════════════╗\n";
-        cout << "║         PLANE #" << setw(2) << (p + 1) << " ("
-             << planes[p].activePassengerCount << " passengers)       ║\n";
-        cout << "╚════════════════════════════════════════╝\n\n";
-
-        cout << left
-             << setw(12) << "ID"
-             << setw(25) << "Name"
-             << setw(8) << "Seat"
-             << setw(12) << "Class"
-             << "\n";
-        cout << string(57, '-') << "\n";
-
-        // Display all passengers on this plane
-        int passengersOnThisPlane = 0;
-        for (int i = 0; i < SEATS_PER_PLANE; i++)
-        {
-            if (planes[p].passengers[i].isActive)
-            {
-                Passenger &pass = planes[p].passengers[i];
-                string seat = to_string(pass.seatRow + 1) + columnIndexToLetter(pass.seatColumn);
-
-                cout << left
-                     << setw(12) << pass.passengerId
-                     << setw(25) << pass.passengerName
-                     << setw(8) << seat
-                     << setw(12) << pass.passengerClass
-                     << "\n";
-                totalCount++;
-                passengersOnThisPlane++;
-
-                // Pause every 20 passengers for readability
-                if (passengersOnThisPlane % 20 == 0 && passengersOnThisPlane < planes[p].activePassengerCount)
-                {
-                    cout << "\n[Press Enter to continue or 'q' to quit...]";
-                    string input;
-                    getline(cin, input);
-                    if (!input.empty() && (input[0] == 'q' || input[0] == 'Q'))
-                    {
-                        userWantsToQuit = true;
-                        break;
-                    }
-                }
-            }
-        }
-
-        if (userWantsToQuit)
-            break;
-
-        planesDisplayed++;
-
-        // Pause after every 3 planes
-        if (planesDisplayed % 1 == 0 && p < activePlaneCount - 1)
-        {
-            cout << "\n[Press Enter to see next planes or 'q' to quit...]";
-            string input;
-            getline(cin, input);
-            if (!input.empty() && (input[0] == 'q' || input[0] == 'Q'))
-            {
-                userWantsToQuit = true;
-                break;
-            }
-            clearScreen();
-        }
-    }
-
-    if (!hasPassengers)
-    {
-        cout << "\n[INFO] No passengers found in the system.\n";
-    }
-    else
-    {
-        cout << "\n"
-             << string(57, '=') << "\n";
-        if (userWantsToQuit)
-        {
-            cout << "Viewing stopped by user.\n";
-            cout << "Passengers displayed so far: " << totalCount << "\n";
-        }
-        else
-        {
-            cout << "Total Passengers Across All Planes: " << totalCount << "\n";
-        }
-        cout << "Total Active Planes: " << activePlaneCount << "\n";
-        cout << string(57, '=') << "\n";
-    }
-
-    pauseForUserInput();
-}
-
 // ============================================================================
 // CSV FILE I/O
 // ============================================================================
@@ -1096,7 +857,9 @@ void handleReservation()
     }
 
     // Display seating grid for selected plane
-    displayPlaneSeatingGrid(selectedPlane);
+    cout << "\n[INFO] Plane #" << (selectedPlane + 1) << " - "
+         << (SEATS_PER_PLANE - planes[selectedPlane].activePassengerCount)
+         << " seats available\n";
 
     // Determine valid row range for the selected class
     int minRow, maxRow;
@@ -1202,7 +965,7 @@ void handleReservation()
 
                 if (choice == 1)
                 {
-                    displayPlaneSeatingGrid(selectedPlane);
+                    cout << "\n[INFO] Please try a different seat.\n";
                     seatRow++; // Restore for display
                     break;     // Go back to row selection
                 }
@@ -1279,10 +1042,8 @@ void displayMainMenu()
     cout << "========================================\n\n";
     cout << "1. Make a Reservation\n";
     cout << "2. Cancel a Reservation\n";
-    cout << "3. View All Planes\n";
-    cout << "4. View All Passengers\n";
-    cout << "5. Exit\n\n";
-    cout << "Enter your choice (1-5): ";
+    cout << "3. Exit\n\n";
+    cout << "Enter your choice (1-3): ";
 }
 
 int main()
@@ -1321,16 +1082,6 @@ int main()
             handleCancellation();
             break;
         case 3:
-            clearScreen();
-            displayAllPlanes();
-            pauseForUserInput();
-            break;
-        case 4:
-            clearScreen();
-            displayAllPassengers();
-            pauseForUserInput();
-            break;
-        case 5:
             cout << "\nSaving data to CSV...\n";
             savePassengerDataToCSV();
             cout << "Goodbye!\n";
