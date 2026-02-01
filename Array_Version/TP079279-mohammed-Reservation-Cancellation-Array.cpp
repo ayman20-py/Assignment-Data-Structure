@@ -1049,7 +1049,7 @@ void displayMainMenu()
 int main()
 {
     cout << "========================================\n";
-    cout << "  MULTI-PLANE RESERVATION SYSTEM\n";
+    cout << "  PLANE RESERVATION SYSTEM\n";
     cout << "========================================\n\n";
     cout << "Loading passenger data from CSV...\n";
 
