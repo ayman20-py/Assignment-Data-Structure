@@ -1,7 +1,10 @@
+#pragma once
 #include <iostream>
 #include <fstream>
 #include <sstream>
+#include <string>
 #include ".\passengerNode.cpp"
+
 using namespace std;
 
 // System constants
@@ -96,7 +99,7 @@ PassengerLinkedList readPassengerCSV() {
        
     }
     csvInputFile.close();
-    cout << "Total Number of planes: " << totalPlanes << endl;
+    passengerLinkedList.setTotalPlanes(totalPlanes);
 
     return passengerLinkedList;
 }
