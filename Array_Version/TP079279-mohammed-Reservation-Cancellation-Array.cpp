@@ -13,7 +13,9 @@ NEW FEATURES:
 - Automatically creates new planes when current ones are full
 - Each plane has 180 seats (30x6 seating grid)
 - Can delete passengers from any specific plane
-- Uses Array of Arrays (2D structure)
+- Uses Array of Arrays (1D and 2D structure)
+- 1D Array for passengers per plane
+- 2D Array for seating grid per plane
 ===============================================================================
 */
 
