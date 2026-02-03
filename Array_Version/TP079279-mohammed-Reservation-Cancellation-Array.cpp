@@ -1,10 +1,11 @@
 /*
 ===============================================================================
-MULTI-PLANE FLIGHT RESERVATION SYSTEM - ARRAY VERSION
+PLANE FLIGHT RESERVATION SYSTEM - ARRAY VERSION
 ===============================================================================
 Student ID: TP079279
+Student ID: TP083605
 Assignment: Data Structures Assignment Task 1
-Component: Multi-Plane Reservation System (Array Version)
+Component: Plane Reservation System (Array Version)
 Date: January 2026
 
 NEW FEATURES:
@@ -1034,9 +1035,9 @@ void handleCancellation()
 void displayMainMenu()
 {
     cout << "\n========================================\n";
-    cout << "  MULTI-PLANE RESERVATION SYSTEM\n";
+    cout << "  PLANE RESERVATION SYSTEM\n";
     cout << "========================================\n";
-    cout << "  Student ID: TP079279\n";
+    cout << "  Students ID: TP079279 and TP083605\n";
     cout << "  Total Planes: " << activePlaneCount << "\n";
     cout << "  Total Passengers: " << getTotalPassengers() << "\n";
     cout << "========================================\n\n";
