@@ -1554,7 +1554,7 @@ void displayMainMenu()
     cout << "2. Cancel a Reservation\n";
     cout << "3. Seat Lookup - Search by ID\n";
     cout << "4. Manifest Report - Passenger List\n";
-    cout << "5. Seat Report - Seating Chart\n";
+    cout << "5. Seat Report - Seating Chart ()\n";
     cout << "6. Exit\n\n";
     cout << "Enter your choice (1-6): ";
 }
