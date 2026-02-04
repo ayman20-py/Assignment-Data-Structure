@@ -9963,7 +9963,6 @@ PassengerID,Name,SeatRow,SeatColumn,Class
 109984,Eve Thomas,11,B,Economy
 109985,Henry Davis,11,C,Economy
 109986,Mia Anderson,11,D,Economy
-109987,Sara Smith,11,E,Economy
 109989,Jack Johnson,11,F,Economy
 109990,Henry Anderson,12,A,Economy
 109991,Mia Martin,12,B,Economy
@@ -9975,6 +9974,7 @@ PassengerID,Name,SeatRow,SeatColumn,Class
 109999,Grace Davis,13,B,Economy
 110000,mohammed,13,C,Economy
 110001,mo,13,D,Economy
+110002,moe,13,E,First
 109627,Mia Harris,1,A,First
 109648,Eve Wilson,1,B,First
 109716,Frank Brown,1,C,First
@@ -10001,3 +10001,4 @@ PassengerID,Name,SeatRow,SeatColumn,Class
 109936,Tom Miller,1,C,First
 109973,Quinn Martinez,1,D,First
 109937,Tom Miller,1,A,First
+110003,mohammed,3,F,First
