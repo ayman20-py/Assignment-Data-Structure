@@ -2,20 +2,21 @@
 ===============================================================================
 PLANE FLIGHT RESERVATION SYSTEM - ARRAY VERSION
 ===============================================================================
-Student ID: TP079279
-Student ID: TP083605
+Student ID: TP079279 (Menu 1 & 2: Reservation & Cancellation)
+Student ID: TP083605 (Menu 3, 4 & 5: Seat Lookup, Manifest, Seat Report)
 Assignment: Data Structures Assignment Task 1
 Component: Plane Reservation System (Array Version)
-Date: January 2026
+Date: Feb 2026
 
-NEW FEATURES:
-- Supports 10,000+ passengers across multiple planes
-- Automatically creates new planes when current ones are full
-- Each plane has 180 seats (30x6 seating grid)
-- Can delete passengers from any specific plane
-- Uses Array of Arrays (1D and 2D structure)
-- 1D Array for passengers per plane
-- 2D Array for seating grid per plane
+CODE ORGANIZATION:
+- Section 1: Shared/Common Functions (Both team members use)
+- Section 2: TP079279 - Reservation (Insertion) Functions
+- Section 3: TP079279 - Reservation Menu Handler (Menu 1)
+- Section 4: TP079279 - Cancellation Functions (Menu 2)
+- Section 5: TP083605 - Seat Lookup Functions (Menu 3)
+- Section 6: TP083605 - Manifest Report Functions (Menu 4)
+- Section 7: TP083605 - Seat Report Functions (Menu 5)
+- Section 8: Main Menu & Program Entry
 ===============================================================================
 */
 
@@ -27,15 +28,16 @@ NEW FEATURES:
 #include <algorithm>
 #include <cctype>
 #include <vector>
+#include <limits>
 
 using namespace std;
 
 // ============================================================================
-// CONSTANTS & CONFIGURATION
+// CONSTANTS & CONFIGURATION (SHARED BY BOTH TEAM MEMBERS)
 // ============================================================================
 
-const int SEATS_PER_PLANE = 180; // Each plane: 30 rows × 6 columns
-const int MAX_PLANES = 100;      // Support up to 100 planes (18,000 passengers)
+const int SEATS_PER_PLANE = 180;
+const int MAX_PLANES = 100;
 const int ROWS_PER_PLANE = 30;
 const int COLUMNS_PER_PLANE = 6;
 
@@ -46,16 +48,16 @@ const string COLUMN_LABELS = "ABCDEF";
 const string CSV_FILE_PATH = "../Dataset/flight_passenger_data.csv_backup.csv";
 
 // ============================================================================
-// PASSENGER STRUCTURE
+// DATA STRUCTURES (SHARED BY BOTH TEAM MEMBERS)
 // ============================================================================
 
 struct Passenger
 {
     string passengerId;
     string passengerName;
-    int planeNumber; // Which plane (0-99)
-    int seatRow;     // Row in that plane (0-29)
-    int seatColumn;  // Column in that plane (0-5)
+    int planeNumber;
+    int seatRow;
+    int seatColumn;
     string passengerClass;
     bool isActive;
 
@@ -63,37 +65,54 @@ struct Passenger
                   seatRow(-1), seatColumn(-1), passengerClass(""), isActive(false) {}
 };
 
-// ============================================================================
-// PLANE STRUCTURE
-// ============================================================================
-
 struct Plane
 {
     int planeNumber;
-    Passenger passengers[SEATS_PER_PLANE];               // Array of 180 passengers
-    char seatingGrid[ROWS_PER_PLANE][COLUMNS_PER_PLANE]; // 2D seating grid
+    Passenger passengers[SEATS_PER_PLANE];               // 1D Array
+    char seatingGrid[ROWS_PER_PLANE][COLUMNS_PER_PLANE]; // 2D Array
     int activePassengerCount;
     bool isActive;
 
     Plane() : planeNumber(-1), activePassengerCount(0), isActive(false) {}
 };
 
-// ============================================================================
-// GLOBAL DATA STRUCTURES
-// ============================================================================
-
-Plane planes[MAX_PLANES]; // Array of planes
-int activePlaneCount = 0; // How many planes are in use
+// Global Arrays
+Plane planes[MAX_PLANES]; // 1D Array of planes
+int activePlaneCount = 0;
 
 // ============================================================================
 // FORWARD DECLARATIONS
 // ============================================================================
 
-void handleReservation(); // Forward declaration for recursive call
+// TP079279 - Reservation & Cancellation
+void handleReservation();
+void handleCancellation();
+bool insertReservation(const string &passengerId, const string &passengerName,
+                       const string &passengerClass, int planeIndex, int seatRow, int seatColumn);
+bool cancelReservation(const string &passengerId);
+
+// TP083605 - Seat Lookup, Manifest, Seat Report
+void handleSeatLookup();
+void handleManifestMenu();
+void handleSeatReport();
+void displayPassengerDetails(int planeIndex, int passengerIndex);
+void displayManifestForPlane(int planeIndex);
+void displayManifestForPlane_FilterByClass(int planeIndex, const string &className);
+void displayPassengersInRow(int planeIndex, int rowNumber);
+void displaySeatingChartForPlane(int planeIndex);
+
+// Shared functions
+void displayAllPassengersForCancellation();
+bool loadPassengerDataFromCSV();
+bool savePassengerDataToCSV();
 
 // ============================================================================
-// UTILITY FUNCTIONS
+// SECTION 1: SHARED/COMMON FUNCTIONS (USED BY BOTH TEAM MEMBERS)
 // ============================================================================
+
+// ────────────────────────────────────────────────────────────────────────────
+// 1.1 Utility Functions
+// ────────────────────────────────────────────────────────────────────────────
 
 void clearInputBuffer()
 {
@@ -110,7 +129,11 @@ void pauseForUserInput()
 
 void clearScreen()
 {
+#ifdef _WIN32
+    system("cls");
+#else
     system("clear");
+#endif
 }
 
 string toUpperCase(const string &input)
@@ -148,9 +171,9 @@ char columnIndexToLetter(int columnIndex)
     return COLUMN_LABELS[columnIndex];
 }
 
-// ============================================================================
-// PLANE MANAGEMENT FUNCTIONS
-// ============================================================================
+// ────────────────────────────────────────────────────────────────────────────
+// 1.2 Plane Management Functions (1D Array Operations)
+// ────────────────────────────────────────────────────────────────────────────
 
 void initializePlane(int planeIndex)
 {
@@ -158,12 +181,12 @@ void initializePlane(int planeIndex)
     planes[planeIndex].activePassengerCount = 0;
     planes[planeIndex].isActive = true;
 
-    // Initialize seating grid
+    // Initialize 2D seating grid
     for (int row = 0; row < ROWS_PER_PLANE; row++)
         for (int col = 0; col < COLUMNS_PER_PLANE; col++)
             planes[planeIndex].seatingGrid[row][col] = AVAILABLE_SEAT;
 
-    // Initialize passengers
+    // Initialize 1D passengers array
     for (int i = 0; i < SEATS_PER_PLANE; i++)
         planes[planeIndex].passengers[i] = Passenger();
 }
@@ -186,20 +209,20 @@ int createNewPlane()
 
 int findPlaneWithAvailableSeat()
 {
-    // Find first plane with available space
+    // Linear search through 1D array of planes
     for (int i = 0; i < activePlaneCount; i++)
     {
         if (planes[i].isActive && planes[i].activePassengerCount < SEATS_PER_PLANE)
             return i;
     }
 
-    // No plane has space, create new one
     return createNewPlane();
 }
 
 int getTotalPassengers()
 {
     int total = 0;
+    // Traverse 1D array of planes
     for (int i = 0; i < activePlaneCount; i++)
         if (planes[i].isActive)
             total += planes[i].activePassengerCount;
@@ -215,17 +238,19 @@ int getTotalAvailableSeats()
     return total;
 }
 
-// ============================================================================
-// PASSENGER SEARCH FUNCTIONS
-// ============================================================================
+// ────────────────────────────────────────────────────────────────────────────
+// 1.3 Search Functions (1D Array Search)
+// ────────────────────────────────────────────────────────────────────────────
 
 bool findPassengerByID(const string &passengerId, int &planeIndex, int &passengerIndex)
 {
+    // Linear search through 1D array of planes
     for (int p = 0; p < activePlaneCount; p++)
     {
         if (!planes[p].isActive)
             continue;
 
+        // Linear search through 1D array of passengers
         for (int i = 0; i < planes[p].activePassengerCount; i++)
         {
             if (planes[p].passengers[i].isActive &&
@@ -240,98 +265,6 @@ bool findPassengerByID(const string &passengerId, int &planeIndex, int &passenge
     return false;
 }
 
-bool isClassSectionFullOnPlane(int planeIndex, const string &className)
-{
-    int startRow, endRow;
-
-    if (className == "First")
-    {
-        startRow = 0;
-        endRow = 2;
-    }
-    else if (className == "Business")
-    {
-        startRow = 3;
-        endRow = 9;
-    }
-    else if (className == "Economy")
-    {
-        startRow = 10;
-        endRow = 29;
-    }
-    else
-    {
-        return true; // Unknown class, consider full
-    }
-
-    // Check if any seat is available in this class section
-    for (int row = startRow; row <= endRow; row++)
-    {
-        for (int col = 0; col < COLUMNS_PER_PLANE; col++)
-        {
-            if (planes[planeIndex].seatingGrid[row][col] == AVAILABLE_SEAT)
-            {
-                return false; // Found available seat, section NOT full
-            }
-        }
-    }
-
-    return true; // All seats occupied, section is FULL
-}
-
-string getClassFromSeatRow(int seatRow)
-{
-    if (seatRow >= 0 && seatRow <= 2)
-        return "First";
-    else if (seatRow >= 3 && seatRow <= 9)
-        return "Business";
-    else if (seatRow >= 10 && seatRow <= 29)
-        return "Economy";
-    return "Economy"; // Default
-}
-
-// Helper function to determine class based on seat row
-// Helper function to count available seats in a specific class on a plane
-int countAvailableSeatsInClass(int planeIndex, const string &className)
-{
-    if (planeIndex < 0 || planeIndex >= activePlaneCount || !planes[planeIndex].isActive)
-        return 0;
-
-    int count = 0;
-    int startRow, endRow;
-
-    // Determine row range for the class
-    if (className == "First")
-    {
-        startRow = 0;
-        endRow = 2;
-    }
-    else if (className == "Business")
-    {
-        startRow = 3;
-        endRow = 9;
-    }
-    else // Economy
-    {
-        startRow = 10;
-        endRow = 29;
-    }
-
-    // Count available seats in this class
-    for (int row = startRow; row <= endRow; row++)
-    {
-        for (int col = 0; col < COLUMNS_PER_PLANE; col++)
-        {
-            if (planes[planeIndex].seatingGrid[row][col] == AVAILABLE_SEAT)
-            {
-                count++;
-            }
-        }
-    }
-
-    return count;
-}
-
 bool findPassengerByNameOnPlane(const string &passengerName, int planeIndex, int &passengerIndex)
 {
     string searchNameUpper = toUpperCase(passengerName);
@@ -339,6 +272,7 @@ bool findPassengerByNameOnPlane(const string &passengerName, int planeIndex, int
     if (planeIndex < 0 || planeIndex >= activePlaneCount || !planes[planeIndex].isActive)
         return false;
 
+    // Linear search through 1D array of passengers on specific plane
     for (int i = 0; i < planes[planeIndex].activePassengerCount; i++)
     {
         if (planes[planeIndex].passengers[i].isActive)
@@ -354,41 +288,17 @@ bool findPassengerByNameOnPlane(const string &passengerName, int planeIndex, int
     return false;
 }
 
-bool findPassengerByName(const string &passengerName, int &planeIndex, int &passengerIndex)
-{
-    string searchNameUpper = toUpperCase(passengerName);
-
-    for (int p = 0; p < activePlaneCount; p++)
-    {
-        if (!planes[p].isActive)
-            continue;
-
-        for (int i = 0; i < planes[p].activePassengerCount; i++)
-        {
-            if (planes[p].passengers[i].isActive)
-            {
-                string storedNameUpper = toUpperCase(planes[p].passengers[i].passengerName);
-                if (storedNameUpper == searchNameUpper)
-                {
-                    planeIndex = p;
-                    passengerIndex = i;
-                    return true;
-                }
-            }
-        }
-    }
-    return false;
-}
-
 string generateUniquePassengerID()
 {
     int maxID = 99999;
 
+    // Traverse all planes (1D array)
     for (int p = 0; p < activePlaneCount; p++)
     {
         if (!planes[p].isActive)
             continue;
 
+        // Traverse all passengers (1D array)
         for (int i = 0; i < planes[p].activePassengerCount; i++)
         {
             if (planes[p].passengers[i].isActive && !planes[p].passengers[i].passengerId.empty())
@@ -403,28 +313,31 @@ string generateUniquePassengerID()
     return to_string(maxID + 1);
 }
 
-// ============================================================================
-// SEAT MANAGEMENT FUNCTIONS
-// ============================================================================
+// ────────────────────────────────────────────────────────────────────────────
+// 1.4 Seat Management Functions (2D Array Operations)
+// ────────────────────────────────────────────────────────────────────────────
 
 bool isSeatAvailable(int planeIndex, int seatRow, int seatColumn)
 {
+    // Direct access to 2D array
     return planes[planeIndex].seatingGrid[seatRow][seatColumn] == AVAILABLE_SEAT;
 }
 
 void allocateSeat(int planeIndex, int seatRow, int seatColumn)
 {
+    // Update 2D array
     planes[planeIndex].seatingGrid[seatRow][seatColumn] = OCCUPIED_SEAT;
 }
 
 void deallocateSeat(int planeIndex, int seatRow, int seatColumn)
 {
+    // Update 2D array
     planes[planeIndex].seatingGrid[seatRow][seatColumn] = AVAILABLE_SEAT;
 }
 
 int findAvailableSeat(int planeIndex, int &seatRow, int &seatColumn)
 {
-    // Find first available seat in the plane
+    // Sequential scan of 2D grid
     for (int row = 0; row < ROWS_PER_PLANE; row++)
     {
         for (int col = 0; col < COLUMNS_PER_PLANE; col++)
@@ -437,125 +350,66 @@ int findAvailableSeat(int planeIndex, int &seatRow, int &seatColumn)
             }
         }
     }
-    return -1; // No seat available
+    return -1;
 }
 
-// ============================================================================
-// RESERVATION FUNCTIONS
-// ============================================================================
+// ────────────────────────────────────────────────────────────────────────────
+// 1.5 Class Helper Functions
+// ────────────────────────────────────────────────────────────────────────────
 
-bool insertReservation(const string &passengerId, const string &passengerName,
-                       const string &passengerClass, int planeIndex, int seatRow, int seatColumn)
+string getClassFromSeatRow(int seatRow)
 {
-    // Validate plane index
+    if (seatRow >= 0 && seatRow <= 2)
+        return "First";
+    else if (seatRow >= 3 && seatRow <= 9)
+        return "Business";
+    else if (seatRow >= 10 && seatRow <= 29)
+        return "Economy";
+    return "Economy";
+}
+
+int countAvailableSeatsInClass(int planeIndex, const string &className)
+{
     if (planeIndex < 0 || planeIndex >= activePlaneCount || !planes[planeIndex].isActive)
+        return 0;
+
+    int count = 0;
+    int startRow, endRow;
+
+    if (className == "First")
     {
-        cout << "\n[ERROR] Invalid plane number.\n";
-        return false;
+        startRow = 0;
+        endRow = 2;
+    }
+    else if (className == "Business")
+    {
+        startRow = 3;
+        endRow = 9;
+    }
+    else
+    {
+        startRow = 10;
+        endRow = 29;
     }
 
-    // Check for duplicate ID across ALL planes (IDs must be globally unique)
-    int dummyPlane, dummyPass;
-    if (findPassengerByID(passengerId, dummyPlane, dummyPass))
+    // Scan 2D grid in class range
+    for (int row = startRow; row <= endRow; row++)
     {
-        cout << "\n[ERROR] Passenger ID '" << passengerId << "' already exists.\n";
-        return false;
+        for (int col = 0; col < COLUMNS_PER_PLANE; col++)
+        {
+            if (planes[planeIndex].seatingGrid[row][col] == AVAILABLE_SEAT)
+            {
+                count++;
+            }
+        }
     }
 
-    // Check for duplicate name ONLY on this specific plane (names can duplicate across planes)
-    int dummyIndex;
-    if (findPassengerByNameOnPlane(passengerName, planeIndex, dummyIndex))
-    {
-        cout << "\n[ERROR] Passenger '" << passengerName << "' already exists on Plane #"
-             << (planeIndex + 1) << ".\n";
-        cout << "Same name is allowed on different planes, but not on the same plane.\n";
-        return false;
-    }
-
-    // Check if seat is available
-    if (!isSeatAvailable(planeIndex, seatRow, seatColumn))
-    {
-        cout << "\n[ERROR] Seat " << (seatRow + 1) << columnIndexToLetter(seatColumn)
-             << " is already occupied.\n";
-        return false;
-    }
-
-    // Check if plane is full
-    if (planes[planeIndex].activePassengerCount >= SEATS_PER_PLANE)
-    {
-        cout << "\n[ERROR] Plane #" << (planeIndex + 1) << " is full.\n";
-        return false;
-    }
-
-    // Add passenger to plane
-    int passengerIndex = planes[planeIndex].activePassengerCount;
-
-    planes[planeIndex].passengers[passengerIndex].passengerId = passengerId;
-    planes[planeIndex].passengers[passengerIndex].passengerName = passengerName;
-    planes[planeIndex].passengers[passengerIndex].planeNumber = planeIndex;
-    planes[planeIndex].passengers[passengerIndex].seatRow = seatRow;
-    planes[planeIndex].passengers[passengerIndex].seatColumn = seatColumn;
-    planes[planeIndex].passengers[passengerIndex].passengerClass = passengerClass;
-    planes[planeIndex].passengers[passengerIndex].isActive = true;
-
-    allocateSeat(planeIndex, seatRow, seatColumn);
-    planes[planeIndex].activePassengerCount++;
-
-    cout << "\n[SUCCESS] Reservation added successfully!\n";
-    cout << "Passenger ID: " << passengerId << "\n";
-    cout << "Name: " << passengerName << "\n";
-    cout << "Plane: #" << (planeIndex + 1) << "\n";
-    cout << "Seat: " << (seatRow + 1) << columnIndexToLetter(seatColumn)
-         << " (" << passengerClass << " Class)\n";
-
-    return true;
+    return count;
 }
 
-bool cancelReservation(const string &passengerId)
-{
-    int planeIndex, passengerIndex;
-
-    if (!findPassengerByID(passengerId, planeIndex, passengerIndex))
-    {
-        cout << "\n[ERROR] Passenger ID '" << passengerId << "' not found!\n";
-        return false;
-    }
-
-    Passenger &passenger = planes[planeIndex].passengers[passengerIndex];
-
-    int seatRow = passenger.seatRow;
-    int seatColumn = passenger.seatColumn;
-    string passengerName = passenger.passengerName;
-
-    // Free the seat
-    deallocateSeat(planeIndex, seatRow, seatColumn);
-
-    // Shift passengers left in the array
-    for (int i = passengerIndex; i < planes[planeIndex].activePassengerCount - 1; i++)
-    {
-        planes[planeIndex].passengers[i] = planes[planeIndex].passengers[i + 1];
-    }
-
-    // Clear last passenger slot
-    planes[planeIndex].passengers[planes[planeIndex].activePassengerCount - 1] = Passenger();
-    planes[planeIndex].activePassengerCount--;
-
-    cout << "\n[SUCCESS] Reservation cancelled successfully!\n";
-    cout << "Passenger ID: " << passengerId << "\n";
-    cout << "Name: " << passengerName << "\n";
-    cout << "Plane: #" << (planeIndex + 1) << "\n";
-    cout << "Freed Seat: " << (seatRow + 1) << columnIndexToLetter(seatColumn) << "\n";
-
-    return true;
-}
-
-// ============================================================================
-// DISPLAY FUNCTIONS
-// ============================================================================
-
-// ============================================================================
-// CSV FILE I/O
-// ============================================================================
+// ────────────────────────────────────────────────────────────────────────────
+// 1.6 CSV File I/O Functions
+// ────────────────────────────────────────────────────────────────────────────
 
 bool loadPassengerDataFromCSV()
 {
@@ -572,7 +426,7 @@ bool loadPassengerDataFromCSV()
     int recordsLoaded = 0;
     int duplicateIDsSkipped = 0;
 
-    getline(inputFile, line); // Skip header
+    getline(inputFile, line);
 
     while (getline(inputFile, line))
     {
@@ -588,13 +442,9 @@ bool loadPassengerDataFromCSV()
         getline(ss, seatColumnStr, ',');
         getline(ss, passengerClass, ',');
 
-        // Convert seat row from CSV (1-30) to 0-indexed (0-29)
         int csvSeatRow = stoi(seatRowStr) - 1;
-
-        // AUTO-DETERMINE CLASS BASED ON SEAT ROW (ignore class column from CSV)
         string autoClass = getClassFromSeatRow(csvSeatRow);
 
-        // Check for duplicate ID across ALL planes (must be globally unique)
         int dummyP, dummyI;
         if (findPassengerByID(passengerId, dummyP, dummyI))
         {
@@ -602,14 +452,11 @@ bool loadPassengerDataFromCSV()
             continue;
         }
 
-        // Find a plane where this name doesn't exist AND has space
         int planeIndex = -1;
         int nameIdx;
 
-        // First, try existing planes
         for (int i = 0; i < activePlaneCount; i++)
         {
-            // Check if name doesn't exist on this plane AND plane has space
             if (!findPassengerByNameOnPlane(passengerName, i, nameIdx) &&
                 planes[i].activePassengerCount < SEATS_PER_PLANE)
             {
@@ -618,7 +465,6 @@ bool loadPassengerDataFromCSV()
             }
         }
 
-        // If no suitable plane found, create a new one
         if (planeIndex == -1)
         {
             planeIndex = createNewPlane();
@@ -629,7 +475,6 @@ bool loadPassengerDataFromCSV()
             }
         }
 
-        // Find available seat on the selected plane
         int seatRow, seatColumn;
         if (findAvailableSeat(planeIndex, seatRow, seatColumn) == -1)
         {
@@ -637,7 +482,6 @@ bool loadPassengerDataFromCSV()
             continue;
         }
 
-        // Insert passenger with AUTO-DETERMINED CLASS
         if (insertReservation(passengerId, passengerName, autoClass, planeIndex, seatRow, seatColumn))
         {
             recordsLoaded++;
@@ -666,27 +510,26 @@ bool savePassengerDataToCSV()
         return false;
     }
 
-    // Write header
     outputFile << "PassengerID,Name,SeatRow,SeatColumn,Class\n";
 
     int recordsSaved = 0;
 
-    // Loop through all planes and all passengers
+    // Traverse all planes (1D array)
     for (int p = 0; p < activePlaneCount; p++)
     {
         if (!planes[p].isActive)
             continue;
 
+        // Traverse all passengers (1D array)
         for (int i = 0; i < SEATS_PER_PLANE; i++)
         {
             if (planes[p].passengers[i].isActive)
             {
                 Passenger &pass = planes[p].passengers[i];
 
-                // Write passenger data
                 outputFile << pass.passengerId << ","
                            << pass.passengerName << ","
-                           << (pass.seatRow + 1) << "," // Convert back to 1-indexed
+                           << (pass.seatRow + 1) << ","
                            << columnIndexToLetter(pass.seatColumn) << ","
                            << pass.passengerClass << "\n";
 
@@ -701,8 +544,161 @@ bool savePassengerDataToCSV()
     return true;
 }
 
+// ────────────────────────────────────────────────────────────────────────────
+// 1.7 Display All Passengers (Helper for Cancellation)
+// ────────────────────────────────────────────────────────────────────────────
+
+void displayAllPassengersForCancellation()
+{
+    clearScreen();
+    cout << "\n========================================\n";
+    cout << "    ALL PASSENGERS (ALL PLANES)\n";
+    cout << "========================================\n\n";
+
+    int totalCount = 0;
+    int displayCount = 0;
+
+    cout << left
+         << setw(5) << "No"
+         << setw(12) << "ID"
+         << setw(22) << "Name"
+         << setw(8) << "Plane"
+         << setw(8) << "Seat"
+         << setw(10) << "Class"
+         << "\n";
+    cout << string(65, '-') << "\n";
+
+    // Traverse 1D array of planes
+    for (int p = 0; p < activePlaneCount; p++)
+    {
+        if (!planes[p].isActive || planes[p].activePassengerCount == 0)
+            continue;
+
+        // Traverse 1D array of passengers
+        for (int i = 0; i < planes[p].activePassengerCount; i++)
+        {
+            if (planes[p].passengers[i].isActive)
+            {
+                Passenger &pass = planes[p].passengers[i];
+                string seat = to_string(pass.seatRow + 1) + columnIndexToLetter(pass.seatColumn);
+
+                cout << left
+                     << setw(5) << (++displayCount)
+                     << setw(12) << pass.passengerId
+                     << setw(22) << pass.passengerName.substr(0, 20)
+                     << setw(8) << ("#" + to_string(p + 1))
+                     << setw(8) << seat
+                     << setw(10) << pass.passengerClass
+                     << "\n";
+
+                totalCount++;
+
+                if (displayCount % 20 == 0)
+                {
+                    cout << "\n[Press Enter to continue or 'q' to stop viewing...]";
+                    string input;
+                    getline(cin, input);
+                    if (!input.empty() && (input[0] == 'q' || input[0] == 'Q'))
+                    {
+                        cout << "\n"
+                             << string(65, '=') << "\n";
+                        cout << "Viewing stopped. Total passengers displayed: " << displayCount << "\n";
+                        return;
+                    }
+                }
+            }
+        }
+    }
+
+    cout << "\n"
+         << string(65, '=') << "\n";
+    cout << "Total Passengers: " << totalCount << "\n";
+    cout << "Total Active Planes: " << activePlaneCount << "\n";
+    cout << string(65, '=') << "\n";
+}
+
 // ============================================================================
-// USER INTERACTION
+// SECTION 2: TP079279 - RESERVATION (INSERTION) FUNCTIONS
+// ============================================================================
+// This section handles inserting passengers into the 1D and 2D arrays
+// ============================================================================
+
+bool insertReservation(const string &passengerId, const string &passengerName,
+                       const string &passengerClass, int planeIndex, int seatRow, int seatColumn)
+{
+    // Validate plane index
+    if (planeIndex < 0 || planeIndex >= activePlaneCount || !planes[planeIndex].isActive)
+    {
+        cout << "\n[ERROR] Invalid plane number.\n";
+        return false;
+    }
+
+    // Check for duplicate ID globally (across all planes)
+    int dummyPlane, dummyPass;
+    if (findPassengerByID(passengerId, dummyPlane, dummyPass))
+    {
+        cout << "\n[ERROR] Passenger ID '" << passengerId << "' already exists.\n";
+        return false;
+    }
+
+    // Check for duplicate name on this specific plane only
+    int dummyIndex;
+    if (findPassengerByNameOnPlane(passengerName, planeIndex, dummyIndex))
+    {
+        cout << "\n[ERROR] Passenger '" << passengerName << "' already exists on Plane #"
+             << (planeIndex + 1) << ".\n";
+        cout << "Same name is allowed on different planes, but not on the same plane.\n";
+        return false;
+    }
+
+    // Check if seat is available in 2D grid
+    if (!isSeatAvailable(planeIndex, seatRow, seatColumn))
+    {
+        cout << "\n[ERROR] Seat " << (seatRow + 1) << columnIndexToLetter(seatColumn)
+             << " is already occupied.\n";
+        return false;
+    }
+
+    // Check if plane is full
+    if (planes[planeIndex].activePassengerCount >= SEATS_PER_PLANE)
+    {
+        cout << "\n[ERROR] Plane #" << (planeIndex + 1) << " is full.\n";
+        return false;
+    }
+
+    // ═══════════════════════════════════════════════════════════════════════
+    // INSERTION INTO 1D ARRAY OF PASSENGERS
+    // ═══════════════════════════════════════════════════════════════════════
+    int passengerIndex = planes[planeIndex].activePassengerCount;
+
+    planes[planeIndex].passengers[passengerIndex].passengerId = passengerId;
+    planes[planeIndex].passengers[passengerIndex].passengerName = passengerName;
+    planes[planeIndex].passengers[passengerIndex].planeNumber = planeIndex;
+    planes[planeIndex].passengers[passengerIndex].seatRow = seatRow;
+    planes[planeIndex].passengers[passengerIndex].seatColumn = seatColumn;
+    planes[planeIndex].passengers[passengerIndex].passengerClass = passengerClass;
+    planes[planeIndex].passengers[passengerIndex].isActive = true;
+
+    // ═══════════════════════════════════════════════════════════════════════
+    // UPDATE 2D SEATING GRID
+    // ═══════════════════════════════════════════════════════════════════════
+    allocateSeat(planeIndex, seatRow, seatColumn);
+
+    planes[planeIndex].activePassengerCount++;
+
+    cout << "\n[SUCCESS] Reservation added successfully!\n";
+    cout << "Passenger ID: " << passengerId << "\n";
+    cout << "Name: " << passengerName << "\n";
+    cout << "Plane: #" << (planeIndex + 1) << "\n";
+    cout << "Seat: " << (seatRow + 1)
+         << columnIndexToLetter(seatColumn)
+         << " (" << passengerClass << " Class)\n";
+
+    return true;
+}
+
+// ============================================================================
+// SECTION 3: TP079279 - RESERVATION MENU HANDLER (MENU 1)
 // ============================================================================
 
 void handleReservation()
@@ -726,7 +722,7 @@ void handleReservation()
             continue;
         }
 
-        break; // Valid name (duplicates allowed)
+        break;
     }
 
     // Get passenger class
@@ -751,10 +747,10 @@ void handleReservation()
         else if (passengerClass == "ECONOMY")
             passengerClass = "Economy";
 
-        break; // Valid class
+        break;
     }
 
-    // Show available planes with class availability
+    // Show available planes
     cout << "\n========================================\n";
     cout << "         AVAILABLE PLANES\n";
     cout << "========================================\n\n";
@@ -818,7 +814,7 @@ void handleReservation()
         }
         clearInputBuffer();
 
-        selectedPlane--; // Convert to 0-indexed
+        selectedPlane--;
 
         if (selectedPlane < 0 || selectedPlane >= activePlaneCount)
         {
@@ -832,7 +828,6 @@ void handleReservation()
             continue;
         }
 
-        // Check if the specific CLASS has available seats on this plane
         int availableSeatsInClass = countAvailableSeatsInClass(selectedPlane, passengerClass);
         if (availableSeatsInClass == 0)
         {
@@ -846,7 +841,6 @@ void handleReservation()
             continue;
         }
 
-        // Check for duplicate name on THIS plane only
         int dummyIdx;
         if (findPassengerByNameOnPlane(passengerName, selectedPlane, dummyIdx))
         {
@@ -856,15 +850,58 @@ void handleReservation()
             continue;
         }
 
-        break; // Valid plane
+        break;
     }
 
-    // Display seating grid for selected plane
-    cout << "\n[INFO] Plane #" << (selectedPlane + 1) << " - "
-         << (SEATS_PER_PLANE - planes[selectedPlane].activePassengerCount)
-         << " seats available\n";
+    // Display seating grid (2D array visualization)
+    clearScreen();
+    cout << "\n========================================\n";
+    cout << "    PLANE #" << (selectedPlane + 1) << " SEATING GRID\n";
+    cout << "========================================\n\n";
 
-    // Determine valid row range for the selected class
+    cout << "Your Class: " << passengerClass << "\n";
+    cout << "Available Seats: " << (SEATS_PER_PLANE - planes[selectedPlane].activePassengerCount) << "\n\n";
+
+    cout << "     ";
+    for (int col = 0; col < COLUMNS_PER_PLANE; col++)
+        cout << " " << columnIndexToLetter(col) << "  ";
+    cout << "\n\n";
+
+    cout << "======== FIRST CLASS (Rows 1-3) ========\n";
+    for (int row = 0; row <= 2; row++)
+    {
+        cout << setw(2) << (row + 1) << "   ";
+        for (int col = 0; col < COLUMNS_PER_PLANE; col++)
+            cout << (planes[selectedPlane].seatingGrid[row][col] == AVAILABLE_SEAT ? " O  " : " X  ");
+        cout << "\n";
+    }
+
+    cout << "\n";
+
+    cout << "====== BUSINESS CLASS (Rows 4-10) ======\n";
+    for (int row = 3; row <= 9; row++)
+    {
+        cout << setw(2) << (row + 1) << "   ";
+        for (int col = 0; col < COLUMNS_PER_PLANE; col++)
+            cout << (planes[selectedPlane].seatingGrid[row][col] == AVAILABLE_SEAT ? " O  " : " X  ");
+        cout << "\n";
+    }
+
+    cout << "\n";
+
+    cout << "====== ECONOMY CLASS (Rows 11-30) ======\n";
+    for (int row = 10; row <= 29; row++)
+    {
+        cout << setw(2) << (row + 1) << "   ";
+        for (int col = 0; col < COLUMNS_PER_PLANE; col++)
+            cout << (planes[selectedPlane].seatingGrid[row][col] == AVAILABLE_SEAT ? " O  " : " X  ");
+        cout << "\n";
+    }
+
+    cout << "\n";
+    cout << "Legend: O = Available, X = Occupied\n";
+
+    // Determine valid row range for class
     int minRow, maxRow;
     if (passengerClass == "First")
     {
@@ -885,7 +922,7 @@ void handleReservation()
         cout << "\nYour class: Economy (Rows 11-30)\n";
     }
 
-    // Select seat row and column with option to go back
+    // Select seat
     int seatRow;
     char seatColumnLetter;
     int seatColumn;
@@ -893,7 +930,6 @@ void handleReservation()
 
     while (!seatSelected)
     {
-        // Select seat row
         while (true)
         {
             cout << "\nEnter Seat Row (" << minRow << "-" << maxRow << ") or 0 to choose different plane: ";
@@ -905,11 +941,10 @@ void handleReservation()
             }
             clearInputBuffer();
 
-            // Option to go back
             if (seatRow == 0)
             {
                 cout << "\n[INFO] Going back to plane selection...\n";
-                handleReservation(); // Restart the reservation process
+                handleReservation();
                 return;
             }
 
@@ -920,22 +955,20 @@ void handleReservation()
                 continue;
             }
 
-            seatRow--; // Convert to 0-indexed
-            break;     // Valid row
+            seatRow--;
+            break;
         }
 
-        // Select seat column
         while (true)
         {
             cout << "Enter Seat Column (A-F) or 0 to go back: ";
             cin >> seatColumnLetter;
             clearInputBuffer();
 
-            // Option to go back to row selection
             if (seatColumnLetter == '0')
             {
-                seatRow++; // Restore for display
-                break;     // Go back to row selection
+                seatRow++;
+                break;
             }
 
             seatColumn = columnLetterToIndex(seatColumnLetter);
@@ -945,18 +978,15 @@ void handleReservation()
                 continue;
             }
 
-            // Check if seat is available
             if (!isSeatAvailable(selectedPlane, seatRow, seatColumn))
             {
                 cout << "[ERROR] Seat " << (seatRow + 1) << columnIndexToLetter(seatColumn)
                      << " is occupied. Choose another seat.\n";
 
-                // Ask what they want to do
                 cout << "\nOptions:\n";
-                cout << "1. View seating grid again\n";
+                cout << "1. Try another seat\n";
                 cout << "2. Choose different plane\n";
-                cout << "3. Try another seat\n";
-                cout << "Enter choice (1-3): ";
+                cout << "Enter choice (1-2): ";
 
                 int choice;
                 if (!(cin >> choice))
@@ -966,44 +996,101 @@ void handleReservation()
                 }
                 clearInputBuffer();
 
-                if (choice == 1)
-                {
-                    cout << "\n[INFO] Please try a different seat.\n";
-                    seatRow++; // Restore for display
-                    break;     // Go back to row selection
-                }
-                else if (choice == 2)
+                if (choice == 2)
                 {
                     cout << "\n[INFO] Going back to plane selection...\n";
-                    handleReservation(); // Restart the reservation process
+                    handleReservation();
                     return;
                 }
                 else
                 {
-                    continue; // Try another column
+                    continue;
                 }
             }
 
-            // Valid and available seat!
             seatSelected = true;
             break;
         }
     }
 
-    // Generate ID and insert reservation
-    // AUTO-DETERMINE CLASS based on the actual seat row selected
+    // Generate ID and insert
     string actualClass = getClassFromSeatRow(seatRow);
     string passengerId = generateUniquePassengerID();
     insertReservation(passengerId, passengerName, actualClass, selectedPlane, seatRow, seatColumn);
 
-    // Auto-save to CSV after new reservation
+    // Save to CSV
     savePassengerDataToCSV();
 
     pauseForUserInput();
 }
 
+// ============================================================================
+// SECTION 4: TP079279 - CANCELLATION FUNCTIONS (MENU 2)
+// ============================================================================
+
+bool cancelReservation(const string &passengerId)
+{
+    int planeIndex, passengerIndex;
+
+    // Search for passenger using linear search (1D arrays)
+    if (!findPassengerByID(passengerId, planeIndex, passengerIndex))
+    {
+        cout << "\n[ERROR] Passenger ID '" << passengerId << "' not found!\n";
+        return false;
+    }
+
+    Passenger &passenger = planes[planeIndex].passengers[passengerIndex];
+
+    int seatRow = passenger.seatRow;
+    int seatColumn = passenger.seatColumn;
+    string passengerName = passenger.passengerName;
+
+    // ═══════════════════════════════════════════════════════════════════════
+    // FREE SEAT IN 2D GRID
+    // ═══════════════════════════════════════════════════════════════════════
+    deallocateSeat(planeIndex, seatRow, seatColumn);
+
+    // ═══════════════════════════════════════════════════════════════════════
+    // DELETE FROM 1D ARRAY (Shift elements left)
+    // ═══════════════════════════════════════════════════════════════════════
+    for (int i = passengerIndex; i < planes[planeIndex].activePassengerCount - 1; i++)
+    {
+        planes[planeIndex].passengers[i] = planes[planeIndex].passengers[i + 1];
+    }
+
+    // Clear last slot
+    planes[planeIndex].passengers[planes[planeIndex].activePassengerCount - 1] = Passenger();
+    planes[planeIndex].activePassengerCount--;
+
+    cout << "\n[SUCCESS] Reservation cancelled successfully!\n";
+    cout << "Passenger ID: " << passengerId << "\n";
+    cout << "Name: " << passengerName << "\n";
+    cout << "Plane: #" << (planeIndex + 1) << "\n";
+    cout << "Freed Seat: " << (seatRow + 1) << columnIndexToLetter(seatColumn) << "\n";
+
+    return true;
+}
+
 void handleCancellation()
 {
+    clearScreen();
+    cout << "\n========================================\n";
+    cout << "       CANCEL RESERVATION\n";
+    cout << "========================================\n\n";
+
+    // Option to view all passengers first
+    cout << "Do you want to view all passengers before cancelling? (y/n): ";
+    char viewChoice;
+    cin >> viewChoice;
+    clearInputBuffer();
+
+    if (viewChoice == 'y' || viewChoice == 'Y')
+    {
+        displayAllPassengersForCancellation();
+        cout << "\nPress Enter to continue to cancellation...";
+        cin.get();
+    }
+
     clearScreen();
     cout << "\n========================================\n";
     cout << "       CANCEL RESERVATION\n";
@@ -1023,7 +1110,6 @@ void handleCancellation()
 
     if (cancelReservation(passengerId))
     {
-        // Auto-save to CSV after cancellation
         savePassengerDataToCSV();
     }
 
@@ -1031,22 +1117,444 @@ void handleCancellation()
 }
 
 // ============================================================================
-// MAIN MENU
+// SECTION 5: TP083605 - SEAT LOOKUP FUNCTIONS (MENU 3)
+// ============================================================================
+
+void displayPassengerDetails(int planeIndex, int passengerIndex)
+{
+    Passenger &p = planes[planeIndex].passengers[passengerIndex];
+
+    cout << "\n========================================\n";
+    cout << "          PASSENGER FOUND\n";
+    cout << "========================================\n";
+    cout << "Passenger ID   : " << p.passengerId << "\n";
+    cout << "Name           : " << p.passengerName << "\n";
+    cout << "Plane          : #" << (planeIndex + 1) << "\n";
+    cout << "Seat           : " << (p.seatRow + 1) << columnIndexToLetter(p.seatColumn) << "\n";
+    cout << "Class          : " << p.passengerClass << "\n";
+    cout << "========================================\n";
+}
+
+void handleSeatLookup()
+{
+    clearScreen();
+    cout << "\n========================================\n";
+    cout << "            SEAT LOOKUP\n";
+    cout << "========================================\n\n";
+
+    string passengerId;
+    cout << "Enter Passenger ID to search: ";
+    getline(cin, passengerId);
+    passengerId = trimWhitespace(passengerId);
+
+    if (passengerId.empty())
+    {
+        cout << "\n[ERROR] Passenger ID cannot be empty.\n";
+        pauseForUserInput();
+        return;
+    }
+
+    int planeIndex = -1, passengerIndex = -1;
+
+    // Linear search through 1D arrays
+    if (findPassengerByID(passengerId, planeIndex, passengerIndex))
+    {
+        displayPassengerDetails(planeIndex, passengerIndex);
+    }
+    else
+    {
+        cout << "\n[INFO] Passenger ID '" << passengerId << "' not found.\n";
+    }
+
+    pauseForUserInput();
+}
+
+// ============================================================================
+// SECTION 6: TP083605 - MANIFEST REPORT FUNCTIONS (MENU 4)
+// ============================================================================
+
+void displayManifestForPlane(int planeIndex)
+{
+    clearScreen();
+
+    if (planeIndex < 0 || planeIndex >= activePlaneCount || !planes[planeIndex].isActive)
+    {
+        cout << "\n[ERROR] Invalid plane number.\n";
+        pauseForUserInput();
+        return;
+    }
+
+    if (planes[planeIndex].activePassengerCount == 0)
+    {
+        cout << "\n========================================\n";
+        cout << "         PLANE #" << (planeIndex + 1) << " MANIFEST\n";
+        cout << "========================================\n";
+        cout << "\n[INFO] This plane has no passengers.\n";
+        pauseForUserInput();
+        return;
+    }
+
+    cout << "\n========================================\n";
+    cout << "         PLANE #" << (planeIndex + 1) << " MANIFEST\n";
+    cout << "========================================\n\n";
+
+    cout << left
+         << setw(5) << "No"
+         << setw(12) << "ID"
+         << setw(22) << "Name"
+         << setw(8) << "Seat"
+         << setw(10) << "Class"
+         << "\n";
+
+    cout << "----------------------------------------\n";
+
+    // Traverse 1D array of passengers
+    for (int i = 0; i < planes[planeIndex].activePassengerCount; i++)
+    {
+        if (!planes[planeIndex].passengers[i].isActive)
+            continue;
+
+        Passenger &ps = planes[planeIndex].passengers[i];
+
+        string seat = to_string(ps.seatRow + 1);
+        seat += columnIndexToLetter(ps.seatColumn);
+
+        cout << left
+             << setw(5) << (i + 1)
+             << setw(12) << ps.passengerId
+             << setw(22) << ps.passengerName.substr(0, 20)
+             << setw(8) << seat
+             << setw(10) << ps.passengerClass
+             << "\n";
+    }
+
+    cout << "\n----------------------------------------\n";
+    cout << "Passengers on this plane: " << planes[planeIndex].activePassengerCount << "\n";
+
+    pauseForUserInput();
+}
+
+void displayManifestForPlane_FilterByClass(int planeIndex, const string &className)
+{
+    clearScreen();
+
+    if (planeIndex < 0 || planeIndex >= activePlaneCount || !planes[planeIndex].isActive)
+    {
+        cout << "\n[ERROR] Invalid plane.\n";
+        pauseForUserInput();
+        return;
+    }
+
+    cout << "\n========================================\n";
+    cout << "  PLANE #" << (planeIndex + 1) << " MANIFEST (" << className << " ONLY)\n";
+    cout << "========================================\n\n";
+
+    cout << left
+         << setw(5) << "No"
+         << setw(12) << "ID"
+         << setw(22) << "Name"
+         << setw(8) << "Seat"
+         << setw(10) << "Class"
+         << "\n";
+    cout << "----------------------------------------\n";
+
+    int no = 1;
+    // Traverse 1D array with filter
+    for (int i = 0; i < planes[planeIndex].activePassengerCount; i++)
+    {
+        Passenger &ps = planes[planeIndex].passengers[i];
+        if (!ps.isActive)
+            continue;
+        if (ps.passengerClass != className)
+            continue;
+
+        string seat = to_string(ps.seatRow + 1);
+        seat += columnIndexToLetter(ps.seatColumn);
+
+        cout << left
+             << setw(5) << no++
+             << setw(12) << ps.passengerId
+             << setw(22) << ps.passengerName.substr(0, 20)
+             << setw(8) << seat
+             << setw(10) << ps.passengerClass
+             << "\n";
+    }
+
+    if (no == 1)
+        cout << "\n[INFO] No passengers found in this class.\n";
+
+    pauseForUserInput();
+}
+
+void displayPassengersInRow(int planeIndex, int rowNumber)
+{
+    clearScreen();
+
+    cout << "\n========================================\n";
+    cout << "  PLANE #" << (planeIndex + 1) << " - ROW " << (rowNumber + 1) << " PASSENGERS\n";
+    cout << "========================================\n\n";
+
+    cout << left
+         << setw(5) << "No"
+         << setw(8) << "Seat"
+         << setw(12) << "ID"
+         << setw(22) << "Name"
+         << setw(10) << "Class"
+         << "\n";
+    cout << "----------------------------------------\n";
+
+    int count = 0;
+    // Check 2D grid for occupied seats in this row
+    for (int col = 0; col < COLUMNS_PER_PLANE; col++)
+    {
+        if (planes[planeIndex].seatingGrid[rowNumber][col] == OCCUPIED_SEAT)
+        {
+            // Find passenger in 1D array
+            for (int i = 0; i < SEATS_PER_PLANE; i++)
+            {
+                Passenger &ps = planes[planeIndex].passengers[i];
+                if (ps.isActive && ps.seatRow == rowNumber && ps.seatColumn == col)
+                {
+                    string seat = to_string(ps.seatRow + 1);
+                    seat += columnIndexToLetter(ps.seatColumn);
+
+                    cout << left
+                         << setw(5) << (++count)
+                         << setw(8) << seat
+                         << setw(12) << ps.passengerId
+                         << setw(22) << ps.passengerName.substr(0, 20)
+                         << setw(10) << ps.passengerClass
+                         << "\n";
+                    break;
+                }
+            }
+        }
+    }
+
+    if (count == 0)
+        cout << "\n[INFO] No passengers in this row.\n";
+    else
+        cout << "\n----------------------------------------\n"
+             << "Total passengers in row " << (rowNumber + 1) << ": " << count << "\n";
+
+    pauseForUserInput();
+}
+
+void handleManifestMenu()
+{
+    clearScreen();
+    cout << "\n========================================\n";
+    cout << "          MANIFEST OPTIONS\n";
+    cout << "========================================\n";
+    cout << "1. Normal (no sorting)\n";
+    cout << "2. Display Passengers by Row\n";
+    cout << "3. Filter: First Class ONLY\n";
+    cout << "4. Filter: Business Class ONLY\n";
+    cout << "5. Filter: Economy Class ONLY\n";
+    cout << "Enter choice (1-5): ";
+
+    int choice;
+    if (!(cin >> choice))
+    {
+        clearInputBuffer();
+        cout << "\n[ERROR] Invalid input.\n";
+        pauseForUserInput();
+        return;
+    }
+    clearInputBuffer();
+
+    int planeChoice;
+    cout << "\nEnter Plane Number (1-" << activePlaneCount << "): ";
+    if (!(cin >> planeChoice))
+    {
+        clearInputBuffer();
+        cout << "\n[ERROR] Invalid input.\n";
+        pauseForUserInput();
+        return;
+    }
+    clearInputBuffer();
+
+    if (planeChoice < 1 || planeChoice > activePlaneCount)
+    {
+        cout << "\n[ERROR] Plane number must be between 1 and " << activePlaneCount << ".\n";
+        pauseForUserInput();
+        return;
+    }
+
+    planeChoice--;
+
+    if (planeChoice < 0 || planeChoice >= activePlaneCount || !planes[planeChoice].isActive)
+    {
+        cout << "\n[ERROR] Invalid plane.\n";
+        pauseForUserInput();
+        return;
+    }
+
+    if (choice == 2)
+    {
+        int rowChoice;
+        cout << "Enter Row Number (1-" << ROWS_PER_PLANE << "): ";
+        if (!(cin >> rowChoice))
+        {
+            clearInputBuffer();
+            cout << "\n[ERROR] Invalid input.\n";
+            pauseForUserInput();
+            return;
+        }
+        clearInputBuffer();
+
+        if (rowChoice < 1 || rowChoice > ROWS_PER_PLANE)
+        {
+            cout << "\n[ERROR] Row number must be between 1 and " << ROWS_PER_PLANE << ".\n";
+            pauseForUserInput();
+            return;
+        }
+
+        displayPassengersInRow(planeChoice, rowChoice - 1);
+        return;
+    }
+
+    if (choice == 3)
+    {
+        displayManifestForPlane_FilterByClass(planeChoice, "First");
+        return;
+    }
+    else if (choice == 4)
+    {
+        displayManifestForPlane_FilterByClass(planeChoice, "Business");
+        return;
+    }
+    else if (choice == 5)
+    {
+        displayManifestForPlane_FilterByClass(planeChoice, "Economy");
+        return;
+    }
+
+    displayManifestForPlane(planeChoice);
+}
+
+// ============================================================================
+// SECTION 7: TP083605 - SEAT REPORT FUNCTIONS (MENU 5)
+// ============================================================================
+
+void displaySeatingChartForPlane(int planeIndex)
+{
+    clearScreen();
+
+    if (planeIndex < 0 || planeIndex >= activePlaneCount || !planes[planeIndex].isActive)
+    {
+        cout << "[ERROR] Invalid plane number.\n";
+        pauseForUserInput();
+        return;
+    }
+
+    cout << "=============================================\n";
+    cout << "       PLANE #" << (planeIndex + 1) << " SEATING GRID\n";
+    cout << "=============================================\n\n";
+
+    cout << "       A   B   C   D   E   F\n";
+
+    // Display 2D grid - First Class
+    cout << "\n======== FIRST CLASS (Rows 1-3) ========\n";
+    for (int row = 0; row < 3; row++)
+    {
+        cout << setw(2) << (row + 1) << "    ";
+        for (int col = 0; col < COLUMNS_PER_PLANE; col++)
+        {
+            cout << " " << planes[planeIndex].seatingGrid[row][col] << "  ";
+        }
+        cout << "\n";
+    }
+
+    // Display 2D grid - Business Class
+    cout << "\n====== BUSINESS CLASS (Rows 4-10) ======\n";
+    for (int row = 3; row < 10; row++)
+    {
+        cout << setw(2) << (row + 1) << " ";
+        for (int col = 0; col < COLUMNS_PER_PLANE; col++)
+        {
+            cout << "   " << planes[planeIndex].seatingGrid[row][col];
+        }
+        cout << "\n";
+    }
+
+    // Display 2D grid - Economy Class
+    cout << "\n====== ECONOMY CLASS (Rows 11-30) ======\n";
+    for (int row = 10; row < ROWS_PER_PLANE; row++)
+    {
+        cout << setw(2) << (row + 1) << " ";
+        for (int col = 0; col < COLUMNS_PER_PLANE; col++)
+        {
+            cout << "   " << planes[planeIndex].seatingGrid[row][col];
+        }
+        cout << "\n";
+    }
+
+    cout << "\nLegend: " << AVAILABLE_SEAT << " = Available, " << OCCUPIED_SEAT << " = Occupied\n";
+    pauseForUserInput();
+}
+
+void handleSeatReport()
+{
+    clearScreen();
+    cout << "\n========================================\n";
+    cout << "            SEAT REPORT\n";
+    cout << "========================================\n\n";
+
+    if (activePlaneCount == 0)
+    {
+        cout << "[INFO] No planes available.\n";
+        pauseForUserInput();
+        return;
+    }
+
+    int planeChoice;
+    cout << "Enter Plane Number (1-" << activePlaneCount << "): ";
+
+    if (!(cin >> planeChoice))
+    {
+        clearInputBuffer();
+        cout << "[ERROR] Invalid input.\n";
+        pauseForUserInput();
+        return;
+    }
+
+    clearInputBuffer();
+
+    if (planeChoice < 1 || planeChoice > activePlaneCount)
+    {
+        cout << "[ERROR] Plane number must be between 1 and " << activePlaneCount << ".\n";
+        pauseForUserInput();
+        return;
+    }
+
+    planeChoice--;
+
+    displaySeatingChartForPlane(planeChoice);
+}
+
+// ============================================================================
+// SECTION 8: MAIN MENU & PROGRAM ENTRY
 // ============================================================================
 
 void displayMainMenu()
 {
     cout << "\n========================================\n";
-    cout << "  PLANE RESERVATION SYSTEM\n";
+    cout << "  MULTI-PLANE RESERVATION SYSTEM\n";
     cout << "========================================\n";
-    cout << "  Students ID: TP079279 and TP083605\n";
+    cout << "  TP079279: Menu 1 & 2 (Reservation & Cancellation)\n";
+    cout << "  TP083605: Menu 3, 4 & 5 (Lookup, Manifest, Seat Report)\n";
+    cout << "========================================\n";
     cout << "  Total Planes: " << activePlaneCount << "\n";
     cout << "  Total Passengers: " << getTotalPassengers() << "\n";
     cout << "========================================\n\n";
-    cout << "1. Make a Reservation\n";
-    cout << "2. Cancel a Reservation\n";
-    cout << "3. Exit\n\n";
-    cout << "Enter your choice (1-3): ";
+    cout << "1. Make a Reservation (TP079279)\n";
+    cout << "2. Cancel a Reservation (TP079279)\n";
+    cout << "3. Seat Lookup - Search by ID (TP083605)\n";
+    cout << "4. Manifest Report - Passenger List (TP083605)\n";
+    cout << "5. Seat Report - Seating Chart (TP083605)\n";
+    cout << "6. Exit\n\n";
+    cout << "Enter your choice (1-6): ";
 }
 
 int main()
@@ -1079,17 +1587,27 @@ int main()
         switch (choice)
         {
         case 1:
-            handleReservation();
+            handleReservation(); // TP079279
             break;
         case 2:
-            handleCancellation();
+            handleCancellation(); // TP079279
             break;
         case 3:
+            handleSeatLookup(); // TP083605
+            break;
+        case 4:
+            handleManifestMenu(); // TP083605
+            break;
+        case 5:
+            handleSeatReport(); // TP083605
+            break;
+        case 6:
             cout << "\nSaving data to CSV...\n";
             savePassengerDataToCSV();
             cout << "Goodbye!\n";
             running = false;
             break;
+
         default:
             cout << "\n[ERROR] Invalid choice.\n";
             pauseForUserInput();

@@ -18,7 +18,6 @@ PassengerID,Name,SeatRow,SeatColumn,Class
 100017,Leo White,3,E,First
 100018,Carol Davis,3,F,First
 100019,Noah Jones,4,A,Business
-100020,David Brown,4,B,Business
 100021,Leo Davis,4,C,Business
 100022,Ryan Thomas,4,D,Business
 100023,Quinn Taylor,4,E,Business
@@ -9963,18 +9962,18 @@ PassengerID,Name,SeatRow,SeatColumn,Class
 109984,Eve Thomas,11,B,Economy
 109985,Henry Davis,11,C,Economy
 109986,Mia Anderson,11,D,Economy
-109989,Jack Johnson,11,F,Economy
-109990,Henry Anderson,12,A,Economy
-109991,Mia Martin,12,B,Economy
-109992,Olivia Harris,12,C,Economy
-109994,Jack Taylor,12,D,Economy
-109995,Ryan Harris,12,E,Economy
-109997,Grace Williams,12,F,Economy
-109998,Eve Jones,13,A,Economy
-109999,Grace Davis,13,B,Economy
-110000,mohammed,13,C,Economy
-110001,mo,13,D,Economy
-110002,moe,13,E,First
+109989,Jack Johnson,11,E,Economy
+109990,Henry Anderson,11,F,Economy
+109991,Mia Martin,12,A,Economy
+109992,Olivia Harris,12,B,Economy
+109994,Jack Taylor,12,C,Economy
+109995,Ryan Harris,12,D,Economy
+109997,Grace Williams,12,E,Economy
+109998,Eve Jones,12,F,Economy
+109999,Grace Davis,13,A,Economy
+110000,mohammed,13,B,Economy
+110001,mo,13,C,Economy
+110002,moe,13,D,Economy
 109627,Mia Harris,1,A,First
 109648,Eve Wilson,1,B,First
 109716,Frank Brown,1,C,First
@@ -9996,9 +9995,10 @@ PassengerID,Name,SeatRow,SeatColumn,Class
 109988,Eve Miller,4,A,Business
 109993,Henry Davis,4,B,Business
 109996,Sara Rodriguez,4,C,Business
+110003,mohammed,4,D,First
 109877,Olivia Davis,1,A,First
 109882,Eve Wilson,1,B,First
 109936,Tom Miller,1,C,First
 109973,Quinn Martinez,1,D,First
+110004,mohammed,1,F,First
 109937,Tom Miller,1,A,First
-110003,mohammed,3,F,First
