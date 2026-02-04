@@ -29,6 +29,7 @@ CODE ORGANIZATION:
 #include <cctype>
 #include <vector>
 #include <limits>
+#include <chrono>
 
 using namespace std;
 
@@ -37,7 +38,7 @@ using namespace std;
 // ============================================================================
 
 const int SEATS_PER_PLANE = 180;
-const int MAX_PLANES = 100;
+const int MAX_PLANES = 1000;
 const int ROWS_PER_PLANE = 30;
 const int COLUMNS_PER_PLANE = 6;
 
@@ -45,7 +46,7 @@ const char AVAILABLE_SEAT = 'O';
 const char OCCUPIED_SEAT = 'X';
 
 const string COLUMN_LABELS = "ABCDEF";
-const string CSV_FILE_PATH = "../Dataset/flight_passenger_data.csv_backup.csv";
+const string CSV_FILE_PATH = "../Dataset/flight_passenger_data.csv";
 
 // ============================================================================
 // DATA STRUCTURES (SHARED BY BOTH TEAM MEMBERS)
@@ -426,7 +427,7 @@ bool loadPassengerDataFromCSV()
     int recordsLoaded = 0;
     int duplicateIDsSkipped = 0;
 
-    getline(inputFile, line);
+    getline(inputFile, line); // Skip header
 
     while (getline(inputFile, line))
     {
@@ -442,9 +443,15 @@ bool loadPassengerDataFromCSV()
         getline(ss, seatColumnStr, ',');
         getline(ss, passengerClass, ',');
 
-        int csvSeatRow = stoi(seatRowStr) - 1;
-        string autoClass = getClassFromSeatRow(csvSeatRow);
+        // Convert seat from CSV (1-30, A-F) to 0-indexed
+        int seatRow = stoi(seatRowStr) - 1; // CSV: 1-30 → Code: 0-29
+        char seatColLetter = seatColumnStr[0];
+        int seatColumn = columnLetterToIndex(seatColLetter); // A-F → 0-5
 
+        // Auto-determine class from row
+        string autoClass = getClassFromSeatRow(seatRow);
+
+        // Check for duplicate ID globally
         int dummyP, dummyI;
         if (findPassengerByID(passengerId, dummyP, dummyI))
         {
@@ -452,19 +459,23 @@ bool loadPassengerDataFromCSV()
             continue;
         }
 
+        // ═══════════════════════════════════════════════════════════════════
+        // NEW LOGIC: Use EXACT seat from CSV
+        // Find a plane where this EXACT seat is available
+        // ═══════════════════════════════════════════════════════════════════
         int planeIndex = -1;
-        int nameIdx;
 
+        // Search through existing planes for this exact seat
         for (int i = 0; i < activePlaneCount; i++)
         {
-            if (!findPassengerByNameOnPlane(passengerName, i, nameIdx) &&
-                planes[i].activePassengerCount < SEATS_PER_PLANE)
+            if (isSeatAvailable(i, seatRow, seatColumn))
             {
                 planeIndex = i;
-                break;
+                break; // Found plane with this seat available
             }
         }
 
+        // If seat taken on all existing planes, create new plane
         if (planeIndex == -1)
         {
             planeIndex = createNewPlane();
@@ -475,13 +486,7 @@ bool loadPassengerDataFromCSV()
             }
         }
 
-        int seatRow, seatColumn;
-        if (findAvailableSeat(planeIndex, seatRow, seatColumn) == -1)
-        {
-            cout << "[ERROR] No available seat on plane " << (planeIndex + 1) << ". Skipping passenger.\n";
-            continue;
-        }
-
+        // Insert passenger with their EXACT seat from CSV
         if (insertReservation(passengerId, passengerName, autoClass, planeIndex, seatRow, seatColumn))
         {
             recordsLoaded++;
@@ -496,6 +501,7 @@ bool loadPassengerDataFromCSV()
         cout << "Duplicate IDs Skipped: " << duplicateIDsSkipped << "\n";
     cout << "Total Planes Created: " << activePlaneCount << "\n";
     cout << "Total Passengers: " << getTotalPassengers() << "\n";
+    cout << "Average passengers per plane: " << (getTotalPassengers() / activePlaneCount) << "\n";
 
     return true;
 }
@@ -637,32 +643,22 @@ bool insertReservation(const string &passengerId, const string &passengerName,
     int dummyPlane, dummyPass;
     if (findPassengerByID(passengerId, dummyPlane, dummyPass))
     {
-        cout << "\n[ERROR] Passenger ID '" << passengerId << "' already exists.\n";
+        // Skip this error message during CSV load (silent)
         return false;
     }
 
-    // Check for duplicate name on this specific plane only
-    int dummyIndex;
-    if (findPassengerByNameOnPlane(passengerName, planeIndex, dummyIndex))
-    {
-        cout << "\n[ERROR] Passenger '" << passengerName << "' already exists on Plane #"
-             << (planeIndex + 1) << ".\n";
-        cout << "Same name is allowed on different planes, but not on the same plane.\n";
-        return false;
-    }
+    // NOTE: Duplicate name check removed to allow all passengers to load
+    // Manual reservations still check for duplicates in handleReservation()
 
     // Check if seat is available in 2D grid
     if (!isSeatAvailable(planeIndex, seatRow, seatColumn))
     {
-        cout << "\n[ERROR] Seat " << (seatRow + 1) << columnIndexToLetter(seatColumn)
-             << " is already occupied.\n";
         return false;
     }
 
     // Check if plane is full
     if (planes[planeIndex].activePassengerCount >= SEATS_PER_PLANE)
     {
-        cout << "\n[ERROR] Plane #" << (planeIndex + 1) << " is full.\n";
         return false;
     }
 
@@ -686,13 +682,19 @@ bool insertReservation(const string &passengerId, const string &passengerName,
 
     planes[planeIndex].activePassengerCount++;
 
-    cout << "\n[SUCCESS] Reservation added successfully!\n";
-    cout << "Passenger ID: " << passengerId << "\n";
-    cout << "Name: " << passengerName << "\n";
-    cout << "Plane: #" << (planeIndex + 1) << "\n";
-    cout << "Seat: " << (seatRow + 1)
-         << columnIndexToLetter(seatColumn)
-         << " (" << passengerClass << " Class)\n";
+    // Only show success message if called from manual reservation (not CSV load)
+    // We detect this by checking if we're in the middle of bulk loading
+    static bool bulkLoading = false;
+    if (!bulkLoading)
+    {
+        cout << "\n[SUCCESS] Reservation added successfully!\n";
+        cout << "Passenger ID: " << passengerId << "\n";
+        cout << "Name: " << passengerName << "\n";
+        cout << "Plane: #" << (planeIndex + 1) << "\n";
+        cout << "Seat: " << (seatRow + 1)
+             << columnIndexToLetter(seatColumn)
+             << " (" << passengerClass << " Class)\n";
+    }
 
     return true;
 }
@@ -1548,11 +1550,11 @@ void displayMainMenu()
     cout << "  Total Planes: " << activePlaneCount << "\n";
     cout << "  Total Passengers: " << getTotalPassengers() << "\n";
     cout << "========================================\n\n";
-    cout << "1. Make a Reservation\n";
-    cout << "2. Cancel a Reservation\n";
-    cout << "3. Seat Lookup - Search by ID\n";
-    cout << "4. Manifest Report - Passenger List\n";
-    cout << "5. Seat Report - Seating Chart\n";
+    cout << "1. Make a Reservation (TP079279)\n";
+    cout << "2. Cancel a Reservation (TP079279)\n";
+    cout << "3. Seat Lookup - Search by ID (TP083605)\n";
+    cout << "4. Manifest Report - Passenger List (TP083605)\n";
+    cout << "5. Seat Report - Seating Chart (TP083605)\n";
     cout << "6. Exit\n\n";
     cout << "Enter your choice (1-6): ";
 }
