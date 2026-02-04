@@ -1542,7 +1542,7 @@ void handleSeatReport()
 void displayMainMenu()
 {
     cout << "\n========================================\n";
-    cout << "  MULTI-PLANE RESERVATION SYSTEM\n";
+    cout << "  PLANE RESERVATION SYSTEM\n";
     cout << "========================================\n";
     cout << "  TP079279: Menu 1 & 2 (Reservation & Cancellation)\n";
     cout << "  TP083605: Menu 3, 4 & 5 (Lookup, Manifest, Seat Report)\n";
@@ -1550,11 +1550,11 @@ void displayMainMenu()
     cout << "  Total Planes: " << activePlaneCount << "\n";
     cout << "  Total Passengers: " << getTotalPassengers() << "\n";
     cout << "========================================\n\n";
-    cout << "1. Make a Reservation (TP079279)\n";
-    cout << "2. Cancel a Reservation (TP079279)\n";
-    cout << "3. Seat Lookup - Search by ID (TP083605)\n";
-    cout << "4. Manifest Report - Passenger List (TP083605)\n";
-    cout << "5. Seat Report - Seating Chart (TP083605)\n";
+    cout << "1. Make a Reservation\n";
+    cout << "2. Cancel a Reservation\n";
+    cout << "3. Seat Lookup - Search by ID\n";
+    cout << "4. Manifest Report - Passenger List\n";
+    cout << "5. Seat Report - Seating Chart\n";
     cout << "6. Exit\n\n";
     cout << "Enter your choice (1-6): ";
 }
