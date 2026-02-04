@@ -28,8 +28,6 @@ CODE ORGANIZATION:
 #include <algorithm>
 #include <cctype>
 #include <vector>
-#include <limits>
-#include <chrono>
 
 using namespace std;
 
@@ -1124,50 +1122,76 @@ void handleCancellation()
 
 void displayPassengerDetails(int planeIndex, int passengerIndex)
 {
+    // Create a reference to the passenger object so we don’t copy it
     Passenger &p = planes[planeIndex].passengers[passengerIndex];
 
+    // Print a header for clarity
     cout << "\n========================================\n";
     cout << "          PASSENGER FOUND\n";
     cout << "========================================\n";
+
+    // Display passenger information
     cout << "Passenger ID   : " << p.passengerId << "\n";
     cout << "Name           : " << p.passengerName << "\n";
+
+    // Plane index is stored as 0-based, so add 1 for display
     cout << "Plane          : #" << (planeIndex + 1) << "\n";
-    cout << "Seat           : " << (p.seatRow + 1) << columnIndexToLetter(p.seatColumn) << "\n";
+
+    // Seat row is stored as 0-based, so add 1
+    // columnIndexToLetter converts column index (0–5) to A–F
+    cout << "Seat           : " << (p.seatRow + 1)
+         << columnIndexToLetter(p.seatColumn) << "\n";
+
+    // Display passenger class (First, Business, or Economy)
     cout << "Class          : " << p.passengerClass << "\n";
+
+    // Footer line
     cout << "========================================\n";
 }
 
 void handleSeatLookup()
 {
+    // Clear the screen before showing the search menu
     clearScreen();
+
+    // Print the seat lookup title
     cout << "\n========================================\n";
     cout << "            SEAT LOOKUP\n";
     cout << "========================================\n\n";
 
+    // Ask the user to enter the Passenger ID
     string passengerId;
     cout << "Enter Passenger ID to search: ";
     getline(cin, passengerId);
+
+    // Remove extra spaces from the input
     passengerId = trimWhitespace(passengerId);
 
+    // Validate: Passenger ID must not be empty
     if (passengerId.empty())
     {
         cout << "\n[ERROR] Passenger ID cannot be empty.\n";
         pauseForUserInput();
-        return;
+        return; // Stop function if input is invalid
     }
 
-    int planeIndex = -1, passengerIndex = -1;
+    // Variables to store where the passenger is found
+    int planeIndex = -1;
+    int passengerIndex = -1;
 
-    // Linear search through 1D arrays
+    // Linear search through 1D arrays of planes and passengers
     if (findPassengerByID(passengerId, planeIndex, passengerIndex))
     {
+        // If found, display passenger details
         displayPassengerDetails(planeIndex, passengerIndex);
     }
     else
     {
+        // If not found, inform the user
         cout << "\n[INFO] Passenger ID '" << passengerId << "' not found.\n";
     }
 
+    // Pause so the user can read the result
     pauseForUserInput();
 }
 
@@ -1177,15 +1201,18 @@ void handleSeatLookup()
 
 void displayManifestForPlane(int planeIndex)
 {
+    // Clear the screen before displaying the manifest
     clearScreen();
 
+    // Validate plane index and make sure the plane is active
     if (planeIndex < 0 || planeIndex >= activePlaneCount || !planes[planeIndex].isActive)
     {
         cout << "\n[ERROR] Invalid plane number.\n";
         pauseForUserInput();
-        return;
+        return; // Stop if plane is invalid
     }
 
+    // Check if the plane has no passengers
     if (planes[planeIndex].activePassengerCount == 0)
     {
         cout << "\n========================================\n";
@@ -1193,13 +1220,15 @@ void displayManifestForPlane(int planeIndex)
         cout << "========================================\n";
         cout << "\n[INFO] This plane has no passengers.\n";
         pauseForUserInput();
-        return;
+        return; // Nothing to display
     }
 
+    // Display manifest header
     cout << "\n========================================\n";
     cout << "         PLANE #" << (planeIndex + 1) << " MANIFEST\n";
     cout << "========================================\n\n";
 
+    // Display table column headings
     cout << left
          << setw(5) << "No"
          << setw(12) << "ID"
@@ -1210,17 +1239,21 @@ void displayManifestForPlane(int planeIndex)
 
     cout << "----------------------------------------\n";
 
-    // Traverse 1D array of passengers
+    // Traverse the 1D array of passengers for this plane
     for (int i = 0; i < planes[planeIndex].activePassengerCount; i++)
     {
+        // Skip inactive passengers
         if (!planes[planeIndex].passengers[i].isActive)
             continue;
 
+        // Reference the current passenger
         Passenger &ps = planes[planeIndex].passengers[i];
 
+        // Convert seat row and column into readable format (e.g. 12A)
         string seat = to_string(ps.seatRow + 1);
         seat += columnIndexToLetter(ps.seatColumn);
 
+        // Display passenger details in table format
         cout << left
              << setw(5) << (i + 1)
              << setw(12) << ps.passengerId
@@ -1230,27 +1263,33 @@ void displayManifestForPlane(int planeIndex)
              << "\n";
     }
 
+    // Display total passengers on this plane
     cout << "\n----------------------------------------\n";
     cout << "Passengers on this plane: " << planes[planeIndex].activePassengerCount << "\n";
 
+    // Pause so the user can read the manifest
     pauseForUserInput();
 }
 
 void displayManifestForPlane_FilterByClass(int planeIndex, const string &className)
 {
+    // Clear the screen before showing results
     clearScreen();
 
+    // Validate plane index + make sure plane is active
     if (planeIndex < 0 || planeIndex >= activePlaneCount || !planes[planeIndex].isActive)
     {
         cout << "\n[ERROR] Invalid plane.\n";
         pauseForUserInput();
-        return;
+        return; // Stop if plane is invalid
     }
 
+    // Print header showing which plane + which class is being filtered
     cout << "\n========================================\n";
     cout << "  PLANE #" << (planeIndex + 1) << " MANIFEST (" << className << " ONLY)\n";
     cout << "========================================\n\n";
 
+    // Print table headings
     cout << left
          << setw(5) << "No"
          << setw(12) << "ID"
@@ -1260,19 +1299,26 @@ void displayManifestForPlane_FilterByClass(int planeIndex, const string &classNa
          << "\n";
     cout << "----------------------------------------\n";
 
-    int no = 1;
-    // Traverse 1D array with filter
+    int no = 1; // Numbering ONLY for passengers that match the filter
+
+    // Traverse the 1D passenger array, but ONLY display passengers in the chosen class
     for (int i = 0; i < planes[planeIndex].activePassengerCount; i++)
     {
         Passenger &ps = planes[planeIndex].passengers[i];
+
+        // Skip inactive slots
         if (!ps.isActive)
             continue;
+
+        // Skip passengers not in the requested class
         if (ps.passengerClass != className)
             continue;
 
+        // Convert seat position into readable format (e.g. 12A)
         string seat = to_string(ps.seatRow + 1);
         seat += columnIndexToLetter(ps.seatColumn);
 
+        // Print passenger info
         cout << left
              << setw(5) << no++
              << setw(12) << ps.passengerId
@@ -1282,20 +1328,24 @@ void displayManifestForPlane_FilterByClass(int planeIndex, const string &classNa
              << "\n";
     }
 
+    // If no passengers matched, no will still be 1
     if (no == 1)
         cout << "\n[INFO] No passengers found in this class.\n";
 
-    pauseForUserInput();
+    pauseForUserInput(); // Pause so user can read the output
 }
 
 void displayPassengersInRow(int planeIndex, int rowNumber)
 {
+    // Clear the screen before showing the row passengers
     clearScreen();
 
+    // Print header showing which plane + which row is being displayed
     cout << "\n========================================\n";
     cout << "  PLANE #" << (planeIndex + 1) << " - ROW " << (rowNumber + 1) << " PASSENGERS\n";
     cout << "========================================\n\n";
 
+    // Print table headings
     cout << left
          << setw(5) << "No"
          << setw(8) << "Seat"
@@ -1305,21 +1355,27 @@ void displayPassengersInRow(int planeIndex, int rowNumber)
          << "\n";
     cout << "----------------------------------------\n";
 
-    int count = 0;
-    // Check 2D grid for occupied seats in this row
+    int count = 0; // Counts how many passengers are found in that row
+
+    // Check the 2D seating grid for occupied seats in THIS row only
     for (int col = 0; col < COLUMNS_PER_PLANE; col++)
     {
+        // If the seat is occupied in the grid, then a passenger must exist there
         if (planes[planeIndex].seatingGrid[rowNumber][col] == OCCUPIED_SEAT)
         {
-            // Find passenger in 1D array
+            // Now search the 1D passenger array to find the passenger who owns that seat
             for (int i = 0; i < SEATS_PER_PLANE; i++)
             {
                 Passenger &ps = planes[planeIndex].passengers[i];
+
+                // Match by seatRow + seatColumn
                 if (ps.isActive && ps.seatRow == rowNumber && ps.seatColumn == col)
                 {
+                    // Convert seat to readable format (e.g. 5C)
                     string seat = to_string(ps.seatRow + 1);
                     seat += columnIndexToLetter(ps.seatColumn);
 
+                    // Print passenger
                     cout << left
                          << setw(5) << (++count)
                          << setw(8) << seat
@@ -1327,23 +1383,26 @@ void displayPassengersInRow(int planeIndex, int rowNumber)
                          << setw(22) << ps.passengerName.substr(0, 20)
                          << setw(10) << ps.passengerClass
                          << "\n";
-                    break;
+
+                    break; // Stop searching once the passenger is found
                 }
             }
         }
     }
 
+    // Show message if the row has no passengers
     if (count == 0)
         cout << "\n[INFO] No passengers in this row.\n";
     else
         cout << "\n----------------------------------------\n"
              << "Total passengers in row " << (rowNumber + 1) << ": " << count << "\n";
 
-    pauseForUserInput();
+    pauseForUserInput(); // Pause so user can read the output
 }
 
 void handleManifestMenu()
 {
+    // Clear screen and display menu options
     clearScreen();
     cout << "\n========================================\n";
     cout << "          MANIFEST OPTIONS\n";
@@ -1356,6 +1415,8 @@ void handleManifestMenu()
     cout << "Enter choice (1-5): ";
 
     int choice;
+
+    // Validate menu choice input
     if (!(cin >> choice))
     {
         clearInputBuffer();
@@ -1366,6 +1427,8 @@ void handleManifestMenu()
     clearInputBuffer();
 
     int planeChoice;
+
+    // Ask which plane the user wants to view
     cout << "\nEnter Plane Number (1-" << activePlaneCount << "): ";
     if (!(cin >> planeChoice))
     {
@@ -1376,6 +1439,7 @@ void handleManifestMenu()
     }
     clearInputBuffer();
 
+    // Validate plane number range
     if (planeChoice < 1 || planeChoice > activePlaneCount)
     {
         cout << "\n[ERROR] Plane number must be between 1 and " << activePlaneCount << ".\n";
@@ -1383,8 +1447,9 @@ void handleManifestMenu()
         return;
     }
 
-    planeChoice--;
+    planeChoice--; // Convert to 0-based index for array
 
+    // Safety check: plane must exist and be active
     if (planeChoice < 0 || planeChoice >= activePlaneCount || !planes[planeChoice].isActive)
     {
         cout << "\n[ERROR] Invalid plane.\n";
@@ -1392,9 +1457,12 @@ void handleManifestMenu()
         return;
     }
 
+    // Option 2: Show passengers in a specific row
     if (choice == 2)
     {
         int rowChoice;
+
+        // Ask which row to display
         cout << "Enter Row Number (1-" << ROWS_PER_PLANE << "): ";
         if (!(cin >> rowChoice))
         {
@@ -1405,6 +1473,7 @@ void handleManifestMenu()
         }
         clearInputBuffer();
 
+        // Validate row range
         if (rowChoice < 1 || rowChoice > ROWS_PER_PLANE)
         {
             cout << "\n[ERROR] Row number must be between 1 and " << ROWS_PER_PLANE << ".\n";
@@ -1412,10 +1481,12 @@ void handleManifestMenu()
             return;
         }
 
+        // Convert to 0-based row index, then display passengers in that row
         displayPassengersInRow(planeChoice, rowChoice - 1);
         return;
     }
 
+    // Option 3/4/5: Filter manifest by class
     if (choice == 3)
     {
         displayManifestForPlane_FilterByClass(planeChoice, "First");
@@ -1432,6 +1503,7 @@ void handleManifestMenu()
         return;
     }
 
+    // Default option: show full manifest for the plane
     displayManifestForPlane(planeChoice);
 }
 
@@ -1441,38 +1513,51 @@ void handleManifestMenu()
 
 void displaySeatingChartForPlane(int planeIndex)
 {
+    // Clear the screen before showing the seating chart
     clearScreen();
 
+    // Validate the plane index:
+    // - must be within range
+    // - plane must be active
     if (planeIndex < 0 || planeIndex >= activePlaneCount || !planes[planeIndex].isActive)
     {
         cout << "[ERROR] Invalid plane number.\n";
-        pauseForUserInput();
-        return;
+        pauseForUserInput(); // Wait so the user can read the error
+        return;              // Stop the function if plane is invalid
     }
 
+    // Print the seating chart title
     cout << "=============================================\n";
     cout << "       PLANE #" << (planeIndex + 1) << " SEATING GRID\n";
     cout << "=============================================\n\n";
 
+    // Print column headers (seat letters A–F)
     cout << "       A   B   C   D   E   F\n";
 
-    // Display 2D grid - First Class
+    // ---------------- FIRST CLASS ----------------
+    // Rows 1 to 3 (stored as 0 to 2 in the array)
     cout << "\n======== FIRST CLASS (Rows 1-3) ========\n";
     for (int row = 0; row < 3; row++)
     {
+        // Display the row number (converted back to 1-based)
         cout << setw(2) << (row + 1) << "    ";
+
+        // Loop through all columns (A–F)
         for (int col = 0; col < COLUMNS_PER_PLANE; col++)
         {
+            // Print seat status from the 2D array
             cout << " " << planes[planeIndex].seatingGrid[row][col] << "  ";
         }
         cout << "\n";
     }
 
-    // Display 2D grid - Business Class
+    // ---------------- BUSINESS CLASS ----------------
+    // Rows 4 to 10 (stored as 3 to 9)
     cout << "\n====== BUSINESS CLASS (Rows 4-10) ======\n";
     for (int row = 3; row < 10; row++)
     {
         cout << setw(2) << (row + 1) << " ";
+
         for (int col = 0; col < COLUMNS_PER_PLANE; col++)
         {
             cout << "   " << planes[planeIndex].seatingGrid[row][col];
@@ -1480,11 +1565,13 @@ void displaySeatingChartForPlane(int planeIndex)
         cout << "\n";
     }
 
-    // Display 2D grid - Economy Class
+    // ---------------- ECONOMY CLASS ----------------
+    // Rows 11 to 30 (stored as 10 to 29)
     cout << "\n====== ECONOMY CLASS (Rows 11-30) ======\n";
     for (int row = 10; row < ROWS_PER_PLANE; row++)
     {
         cout << setw(2) << (row + 1) << " ";
+
         for (int col = 0; col < COLUMNS_PER_PLANE; col++)
         {
             cout << "   " << planes[planeIndex].seatingGrid[row][col];
@@ -1492,37 +1579,50 @@ void displaySeatingChartForPlane(int planeIndex)
         cout << "\n";
     }
 
-    cout << "\nLegend: " << AVAILABLE_SEAT << " = Available, " << OCCUPIED_SEAT << " = Occupied\n";
+    // Explain what the seat symbols mean
+    cout << "\nLegend: " << AVAILABLE_SEAT
+         << " = Available, " << OCCUPIED_SEAT << " = Occupied\n";
+
+    // Pause so the user can view the seating chart
     pauseForUserInput();
 }
 
 void handleSeatReport()
 {
+    // Clear the screen so the seat report looks clean
     clearScreen();
+
+    // Print the title of the seat report
     cout << "\n========================================\n";
     cout << "            SEAT REPORT\n";
     cout << "========================================\n\n";
 
+    // If there are no planes in the system, stop here
     if (activePlaneCount == 0)
     {
         cout << "[INFO] No planes available.\n";
-        pauseForUserInput();
+        pauseForUserInput(); // Wait for user before going back
         return;
     }
 
     int planeChoice;
+
+    // Ask the user which plane they want to see
     cout << "Enter Plane Number (1-" << activePlaneCount << "): ";
 
+    // Check if the user entered a valid number
     if (!(cin >> planeChoice))
     {
-        clearInputBuffer();
+        clearInputBuffer(); // Clear invalid input
         cout << "[ERROR] Invalid input.\n";
         pauseForUserInput();
         return;
     }
 
+    // Remove leftover newline from input buffer
     clearInputBuffer();
 
+    // Check if the plane number is within the valid range
     if (planeChoice < 1 || planeChoice > activePlaneCount)
     {
         cout << "[ERROR] Plane number must be between 1 and " << activePlaneCount << ".\n";
@@ -1530,8 +1630,10 @@ void handleSeatReport()
         return;
     }
 
+    // Convert plane number from 1-based to 0-based index
     planeChoice--;
 
+    // Display the full seating chart for the selected plane
     displaySeatingChartForPlane(planeChoice);
 }
 
@@ -1554,7 +1656,7 @@ void displayMainMenu()
     cout << "2. Cancel a Reservation\n";
     cout << "3. Seat Lookup - Search by ID\n";
     cout << "4. Manifest Report - Passenger List\n";
-    cout << "5. Seat Report - Seating Chart ()\n";
+    cout << "5. Seat Report - Seating Chart\n";
     cout << "6. Exit\n\n";
     cout << "Enter your choice (1-6): ";
 }
