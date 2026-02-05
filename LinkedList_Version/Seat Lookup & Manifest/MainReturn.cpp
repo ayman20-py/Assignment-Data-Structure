@@ -2,8 +2,8 @@
 #include <string>
 #include <iostream>
 #include <iomanip>
-#include "../../Shared_Resources/passengerNode.cpp"
-#include "../../Shared_Resources/passengerRepo.cpp"
+#include "../../Shared_Resources/PassengerNode.cpp"
+#include "../../Shared_Resources/PassengerRepository.cpp"
 
 using namespace std;
 

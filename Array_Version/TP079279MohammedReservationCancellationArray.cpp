@@ -46,7 +46,7 @@ const int economyClassStartRow = 10;
 const int economyClassEndRow = 29;
 
 const string columnLabels = "ABCDEF";
-const string csvFilePath = "../Dataset/flight_passenger_data.csv.csv";
+const string csvFilePath = "../Dataset/FlightPassengerData.csv.csv";
 
 // ============================================================================
 // PASSENGER STRUCTURE

@@ -3,12 +3,12 @@
 #include <fstream>
 #include <sstream>
 #include <string>
-#include ".\passengerNode.cpp"
+#include ".\PassengerNode.cpp"
 
 using namespace std;
 
 // System constants
-const string csvFilePath = "C:\\Users\\User\\Dev\\C++\\Assignment-Data-Structure\\Dataset\\flight_passenger_data.csv.csv";
+const string csvFilePath = "C:\\Users\\User\\Dev\\C++\\Assignment-Data-Structure\\Dataset\\FlightPassengerData.csv.csv";
 const int totalRows = 30;
 const int totalColumns = 6;
 
