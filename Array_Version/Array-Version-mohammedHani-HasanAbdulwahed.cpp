@@ -633,7 +633,7 @@ void displayExecutionTime(chrono::high_resolution_clock::time_point start,
     double milliseconds = duration.count() / 1000.0;
 
     cout << "\n========================================\n";
-    cout << "Execution Time: " << fixed << setprecision(3) << milliseconds << " ms\n";
+    cout << "\nManifest Display Time (Array): " << fixed << setprecision(4) << milliseconds << " ms" << endl;
     cout << "========================================\n";
 }
 
