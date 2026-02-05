@@ -8,7 +8,7 @@
 using namespace std;
 
 // System constants
-const string csvFilePath = "C:\\Users\\User\\Dev\\C++\\Assignment-Data-Structure\\Dataset\\FlightPassengerData.csv.csv";
+const string csvFilePath = "Shared_Resources\\FlightPassengerData.csv";
 const int totalRows = 30;
 const int totalColumns = 6;
 
@@ -48,6 +48,10 @@ PassengerLinkedList readPassengerCSV() {
         return passengerLinkedList;
     }
 
+    const size_t fileBufferSize = 1 << 20;
+    static char fileBuffer[fileBufferSize];
+    csvInputFile.rdbuf()->pubsetbuf(fileBuffer, fileBufferSize);
+
     // Initializing the mostRecentBookings array to all seats available
     for (int rowIndex =0; rowIndex < totalRows; rowIndex++){
         for (int columnIndex=0; columnIndex < totalColumns; columnIndex++) {
@@ -64,19 +68,32 @@ PassengerLinkedList readPassengerCSV() {
     // Skip the header line
     getline(csvInputFile, currentLine);
 
-    while(getline(csvInputFile, currentLine)) {
-        stringstream lineStream(currentLine);
-        string passengerId;
-        string passengerName; 
-        string seatRowString;
-        string seatColumnString;
-        string passengerClass;
+    while (getline(csvInputFile, currentLine)) {
+        size_t firstCommaIndex = currentLine.find(',');
+        if (firstCommaIndex == string::npos) {
+            continue;
+        }
 
-        getline(lineStream, passengerId, ',');
-        getline(lineStream, passengerName, ',');
-        getline(lineStream, seatRowString, ',');
-        getline(lineStream, seatColumnString, ',');
-        getline(lineStream, passengerClass, ',');
+        size_t secondCommaIndex = currentLine.find(',', firstCommaIndex + 1);
+        if (secondCommaIndex == string::npos) {
+            continue;
+        }
+
+        size_t thirdCommaIndex = currentLine.find(',', secondCommaIndex + 1);
+        if (thirdCommaIndex == string::npos) {
+            continue;
+        }
+
+        size_t fourthCommaIndex = currentLine.find(',', thirdCommaIndex + 1);
+        if (fourthCommaIndex == string::npos) {
+            continue;
+        }
+
+        string passengerId = currentLine.substr(0, firstCommaIndex);
+        string passengerName = currentLine.substr(firstCommaIndex + 1, secondCommaIndex - firstCommaIndex - 1);
+        string seatRowString = currentLine.substr(secondCommaIndex + 1, thirdCommaIndex - secondCommaIndex - 1);
+        string seatColumnString = currentLine.substr(thirdCommaIndex + 1, fourthCommaIndex - thirdCommaIndex - 1);
+        string passengerClass = currentLine.substr(fourthCommaIndex + 1);
 
         // Convert seat row to int and making it as index
         int seatRow = stoi(seatRowString) - 1;
@@ -102,4 +119,8 @@ PassengerLinkedList readPassengerCSV() {
     passengerLinkedList.setTotalPlanes(totalPlanes);
 
     return passengerLinkedList;
+}
+
+void savePassengerCSV(const PassengerLinkedList& passengerLinkedList) {
+    passengerLinkedList.writeToCSV(csvFilePath);
 }

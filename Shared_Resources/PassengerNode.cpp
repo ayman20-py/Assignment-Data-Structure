@@ -3,6 +3,9 @@
 #include <string>
 #include <string>
 #include <array>
+#include <cctype>
+#include <fstream>
+#include <iomanip>
 using namespace std;
 
 // This structure represents a single passenger reservation node in the linked list.
@@ -45,6 +48,7 @@ char PassengerconvertColumnIndexToChar(int columnIndex) {
 class PassengerLinkedList {
 private: 
     PassengerNode* head;
+    PassengerNode* tail;
     int totalPlanes;
 
     // Helper function to render seating sections
@@ -68,6 +72,7 @@ private:
 public: 
     PassengerLinkedList() {
         head = nullptr;
+        tail = nullptr;
         totalPlanes = 0;
     }
 
@@ -76,16 +81,12 @@ public:
 
         if (head == nullptr) {
             head = newNode;
+            tail = newNode;
             return;
         }
 
-        // Find last node
-        PassengerNode* current = head;
-        while (current->next != nullptr) {
-            current = current->next; // Move to the next Passenger Node
-        }
-
-        current->next = newNode;
+        tail->next = newNode;
+        tail = newNode;
     }
 
     int getSize() {
@@ -215,6 +216,54 @@ public:
 
     int getTotalPlanes() {
         return totalPlanes;
+    }
+
+    string getNextPassengerId() {
+        int highestPassengerId = 110000;
+        PassengerNode* currentPassenger = head;
+
+        while (currentPassenger != nullptr) {
+            bool isNumericId = !currentPassenger->passengerId.empty();
+            for (char c : currentPassenger->passengerId) {
+                if (!isdigit(static_cast<unsigned char>(c))) {
+                    isNumericId = false;
+                    break;
+                }
+            }
+
+            if (isNumericId) {
+                int currentIdValue = stoi(currentPassenger->passengerId);
+                if (currentIdValue > highestPassengerId) {
+                    highestPassengerId = currentIdValue;
+                }
+            }
+
+            currentPassenger = currentPassenger->next;
+        }
+
+        return to_string(highestPassengerId + 1);
+    }
+
+    void writeToCSV(const string& filePath) const {
+        ofstream csvOutputFile(filePath);
+        if (!csvOutputFile.is_open()) {
+            cout << "Could not open the file for writing: " << filePath << endl;
+            return;
+        }
+
+        csvOutputFile << "PassengerID,Name,SeatRow,SeatColumn,Class" << endl;
+
+        PassengerNode* currentPassenger = head;
+        while (currentPassenger != nullptr) {
+            csvOutputFile << currentPassenger->passengerId << ","
+                         << currentPassenger->passengerName << ","
+                         << (currentPassenger->seatRow + 1) << ","
+                         << PassengerconvertColumnIndexToChar(currentPassenger->seatColumn) << ","
+                         << currentPassenger->passengerClass << endl;
+            currentPassenger = currentPassenger->next;
+        }
+
+        csvOutputFile.close();
     }
 
 };
