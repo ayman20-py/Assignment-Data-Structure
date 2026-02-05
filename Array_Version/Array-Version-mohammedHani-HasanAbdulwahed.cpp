@@ -1677,7 +1677,7 @@ void displayMainMenu()
     cout << "Enter your choice (1-6): ";
 }
 
-int main()
+void runArrayVersion()
 {
     cout << "========================================\n";
     cout << "  PLANE RESERVATION SYSTEM\n";
@@ -1758,6 +1758,4 @@ int main()
             pauseForUserInput();
         }
     }
-
-    return 0;
 }

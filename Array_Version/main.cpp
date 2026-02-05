@@ -4,7 +4,7 @@ using namespace std;
 // Forward declarations for external functions
 // These functions will be defined in the respective .cpp files
 void runArrayVersion();
-void runLinkedListVersion();
+// void runLinkedListVersion();
 
 void displayMainMenu()
 {
@@ -59,7 +59,7 @@ int main()
             cout << "\n========================================\n";
             cout << "  Loading Linked List Version...\n";
             cout << "========================================\n\n";
-            runLinkedListVersion();
+            // runLinkedListVersion();
             break;
 
         case 3:
