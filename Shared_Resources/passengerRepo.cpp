@@ -1,81 +1,105 @@
+#pragma once
 #include <iostream>
 #include <fstream>
+#include <sstream>
+#include <string>
+#include ".\passengerNode.cpp"
 
 using namespace std;
 
-//  A function cannot directly return a 2D array
-// Need to create a struct to hold it and then return it as a struct
-struct StringMatrix {
-    std::string data[10000][5];
+// System constants
+const string csvFilePath = "C:\\Users\\User\\Dev\\C++\\Assignment-Data-Structure\\Dataset\\flight_passenger_data.csv.csv";
+const int totalRows = 30;
+const int totalColumns = 6;
+
+
+struct SeatBookingInfo {
+    string passengerId;
+    string passengerName;
+    string passengerClass;
+    bool isOccupied;
 };
 
-StringMatrix getPassengersArray() {
+SeatBookingInfo mostRecentBookings[totalRows][totalColumns];
 
-    string filepath = "C:\\Users\\User\\Dev\\C++\\Assignment-Data-Structure\\Dataset\\flight_passenger_data.csv.csv";
-    ifstream iFile;
+struct PassengerCSV{
+    string passengerID;
+    string name;
+    int seatRow;
+    char searCol;
+    string pClass;
+};
 
-    iFile.open(filepath);
-    string line = "";
-
-    getline(iFile, line); // Bypass Header line
-
-    int index = 0;
-
-    string id, name, seatRow, seatColumn, seatClass;
-    int sepLocator;
-
-    StringMatrix passengerArray;
-    
-
-    int currentRow = 0;
-    int currentColumn = 0;
-
-    while (getline(iFile, line))
-    {
-        id = getNextItem(line)[0];
-        line = getNextItem(line)[1];
-
-        name = getNextItem(line)[0];
-        line = getNextItem(line)[1];
-
-        seatRow = getNextItem(line)[0];
-        line = getNextItem(line)[1];
-
-        seatColumn = getNextItem(line)[0];
-        line = getNextItem(line)[1];
-
-        seatClass = getNextItem(line)[0];
-        line = getNextItem(line)[1];
-
-        // setting the values in the array
-        passengerArray.data[currentRow][0] = id;
-        passengerArray.data[currentRow][1] = name;
-        passengerArray.data[currentRow][2] = seatRow;
-        passengerArray.data[currentRow][3] = seatColumn;
-        passengerArray.data[currentRow][4] = seatClass;
-        currentRow++;
-
-    }
-    iFile.close();
-
-    return passengerArray;
+int convertColumnCharToIndex(char columnChar) {
+    return columnChar - 'A';
 }
 
-string* getNextItem(string line) {
-    static string returnData[2];
+// This function converts a zero-based column index (0-5) to a seat column character (A-F).
+char convertColumnIndexToChar(int columnIndex) {
+    return 'A' + columnIndex;
+}
 
-    int sepLocator = line.find(",");
-    string element = line.substr(0, sepLocator);
-    string newline = line.substr(sepLocator+1, line.length());
+PassengerLinkedList readPassengerCSV() {
+    ifstream csvInputFile(csvFilePath);
+    PassengerLinkedList passengerLinkedList;
 
-    returnData[0] = element;
-    returnData[1] = newline;
+    if (!csvInputFile.is_open()) {
+        cout << "Could not open the file: " << csvFilePath << endl;
+        return passengerLinkedList;
+    }
 
-    return returnData;
-} 
+    // Initializing the mostRecentBookings array to all seats available
+    for (int rowIndex =0; rowIndex < totalRows; rowIndex++){
+        for (int columnIndex=0; columnIndex < totalColumns; columnIndex++) {
+            mostRecentBookings[rowIndex][columnIndex].isOccupied = false;
+        }
+    }
 
+    string currentLine;
+    int totalRecordsRead = 0;
+    int currentPlaneIndex = 1;
+    int newPlaneIndex = currentPlaneIndex;
+    int totalPlanes = -11111;
 
-int main() {
-    StringMatrix x = getPassengersArray();
-    // cout << x.data[4000][1] << endl;  checking if the array has been populated correctly
+    // Skip the header line
+    getline(csvInputFile, currentLine);
+
+    while(getline(csvInputFile, currentLine)) {
+        stringstream lineStream(currentLine);
+        string passengerId;
+        string passengerName; 
+        string seatRowString;
+        string seatColumnString;
+        string passengerClass;
+
+        getline(lineStream, passengerId, ',');
+        getline(lineStream, passengerName, ',');
+        getline(lineStream, seatRowString, ',');
+        getline(lineStream, seatColumnString, ',');
+        getline(lineStream, passengerClass, ',');
+
+        // Convert seat row to int and making it as index
+        int seatRow = stoi(seatRowString) - 1;
+        int seatColumn = convertColumnCharToIndex(seatColumnString[0]);
+
+        // This will check whether is already someone in that seat
+        // if there is then the algorithm will keep on increasing the plane index
+        // until the seat on the plane is free
+        while (passengerLinkedList.isSeatOccupied(seatRow, seatColumn, newPlaneIndex)) {
+            newPlaneIndex++;
+        }
+
+        // Just to see how many planes are there in total
+        if (newPlaneIndex > totalPlanes) { 
+            totalPlanes = newPlaneIndex;
+        }
+        // Initializing the data of the linked list
+        passengerLinkedList.init(passengerId, passengerName, seatRow, seatColumn, newPlaneIndex, passengerClass);
+        newPlaneIndex = currentPlaneIndex;
+       
+    }
+    csvInputFile.close();
+    passengerLinkedList.setTotalPlanes(totalPlanes);
+
+    return passengerLinkedList;
 }
