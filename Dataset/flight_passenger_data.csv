@@ -8682,7 +8682,6 @@ PassengerID,Name,SeatRow,SeatColumn,Class
 109911,Leo Garcia,4,D,Business
 109933,Ryan Jones,16,C,Economy
 109989,Jack Johnson,6,F,Business
-110000,mohammed,1,A,First
 106029,Ryan Jackson,30,B,Economy
 106103,Carol Harris,24,D,Economy
 106154,Jack Martin,29,F,Economy
@@ -8824,7 +8823,6 @@ PassengerID,Name,SeatRow,SeatColumn,Class
 109928,Alice Anderson,4,D,Business
 109968,Sara Harris,15,F,Economy
 109992,Olivia Harris,2,E,First
-110001,mohammed hani,1,A,First
 106172,Grace Anderson,30,B,Economy
 106183,Eve Taylor,24,D,Economy
 106298,Frank Martin,29,F,Economy

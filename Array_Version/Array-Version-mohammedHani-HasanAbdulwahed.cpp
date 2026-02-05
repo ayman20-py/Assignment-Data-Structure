@@ -28,6 +28,7 @@ CODE ORGANIZATION:
 #include <algorithm>
 #include <cctype>
 #include <vector>
+#include <chrono>
 
 using namespace std;
 
@@ -619,6 +620,21 @@ void displayAllPassengersForCancellation()
     cout << "Total Passengers: " << totalCount << "\n";
     cout << "Total Active Planes: " << activePlaneCount << "\n";
     cout << string(65, '=') << "\n";
+}
+
+// ────────────────────────────────────────────────────────────────────────────
+// 1.8 Execution Time Tracking
+// ────────────────────────────────────────────────────────────────────────────
+
+void displayExecutionTime(chrono::high_resolution_clock::time_point start,
+                          chrono::high_resolution_clock::time_point end)
+{
+    auto duration = chrono::duration_cast<chrono::microseconds>(end - start);
+    double milliseconds = duration.count() / 1000.0;
+
+    cout << "\n========================================\n";
+    cout << "Execution Time: " << fixed << setprecision(3) << milliseconds << " ms\n";
+    cout << "========================================\n";
 }
 
 // ============================================================================
@@ -1691,20 +1707,45 @@ int main()
         switch (choice)
         {
         case 1:
+        {
+            auto start = chrono::high_resolution_clock::now();
             handleReservation(); // TP079279
-            break;
+            auto end = chrono::high_resolution_clock::now();
+            displayExecutionTime(start, end);
+        }
+        break;
         case 2:
+        {
+            auto start = chrono::high_resolution_clock::now();
             handleCancellation(); // TP079279
-            break;
+            auto end = chrono::high_resolution_clock::now();
+            displayExecutionTime(start, end);
+        }
+        break;
         case 3:
+        {
+            auto start = chrono::high_resolution_clock::now();
             handleSeatLookup(); // TP083605
-            break;
+            auto end = chrono::high_resolution_clock::now();
+            displayExecutionTime(start, end);
+        }
+        break;
         case 4:
+        {
+            auto start = chrono::high_resolution_clock::now();
             handleManifestMenu(); // TP083605
-            break;
+            auto end = chrono::high_resolution_clock::now();
+            displayExecutionTime(start, end);
+        }
+        break;
         case 5:
+        {
+            auto start = chrono::high_resolution_clock::now();
             handleSeatReport(); // TP083605
-            break;
+            auto end = chrono::high_resolution_clock::now();
+            displayExecutionTime(start, end);
+        }
+        break;
         case 6:
             cout << "\nSaving data to CSV...\n";
             savePassengerDataToCSV();
