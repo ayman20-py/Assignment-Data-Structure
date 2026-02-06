@@ -45,7 +45,7 @@ const char AVAILABLE_SEAT = 'O';
 const char OCCUPIED_SEAT = 'X';
 
 const string COLUMN_LABELS = "ABCDEF";
-const string CSV_FILE_PATH = "Shared_Resources\\FlightPassengerData.csv";
+const string CSV_FILE_PATH = "Source\\Array\\FlightPassengerDataArray.csv";
 
 // ============================================================================
 // DATA STRUCTURES (SHARED BY BOTH TEAM MEMBERS)
@@ -1663,7 +1663,6 @@ void displayMainMenu()
     cout << "Enter your choice (1-6): ";
 }
 
-#ifndef ARRAY_VERSION_LIBRARY
 int main()
 {
     cout << "========================================\n";
@@ -1723,4 +1722,3 @@ int main()
 
     return 0;
 }
-#endif
