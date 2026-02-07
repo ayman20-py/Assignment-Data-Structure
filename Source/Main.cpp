@@ -2,7 +2,6 @@
 #include <iomanip>
 #include <string>
 #include <chrono>
-#include <vector>
 #include <sstream>
 
 using namespace std;
@@ -12,6 +11,23 @@ using namespace std;
 #undef main
 
 #include "LinkedList/LinkedListMain.cpp"
+
+struct UILines {
+    string lines[100];
+    int count = 0;
+    void add(const string& line) {
+        if (count < 100) lines[count++] = line;
+    }
+};
+
+struct PassengerManifest {
+    PassengerNode passengers[180]; // SEATS_PER_PLANE
+    int count = 0;
+};
+
+struct SeatGrid {
+    char grid[30][6]; // totalRows x totalColumns
+};
 
 struct LoadStats {
     double arrayLoadMs;
@@ -69,13 +85,13 @@ void printLine(char ch, int width) {
     cout << "\n";
 }
 
-void printBox(const string& title, const vector<string>& lines, int width) {
+void printBox(const string& title, const UILines& lines, int width) {
     cout << "+" << string(width - 2, '-') << "+\n";
     cout << "|" << setw(width - 2) << left << title << "|\n";
     cout << "+" << string(width - 2, '-') << "+\n";
 
-    for (const string& line : lines) {
-        cout << "|" << setw(width - 2) << left << line << "|\n";
+    for (int i = 0; i < lines.count; i++) {
+        cout << "|" << setw(width - 2) << left << lines.lines[i] << "|\n";
     }
 
     cout << "+" << string(width - 2, '-') << "+\n";
@@ -119,20 +135,20 @@ void printPerformanceDashboard(const LoadStats& stats, PassengerLinkedList& list
     cout << "FLIGHT MANAGEMENT PERFORMANCE DASHBOARD\n";
     printLine('=', boxWidth);
 
-    vector<string> linkedListLines;
-    linkedListLines.push_back("Version        : Linked List");
-    linkedListLines.push_back("Load Time      : " + formatMs(stats.linkedListLoadMs));
-    linkedListLines.push_back("Passengers     : " + to_string(list.getSize()));
-    linkedListLines.push_back("Planes         : " + to_string(list.getTotalPlanes()));
-    linkedListLines.push_back("Est. Memory    : " + formatBytes(estimateLinkedListMemory(list)) + " (nodes only)");
+    UILines linkedListLines;
+    linkedListLines.add("Version        : Linked List");
+    linkedListLines.add("Load Time      : " + formatMs(stats.linkedListLoadMs));
+    linkedListLines.add("Passengers     : " + to_string(list.getSize()));
+    linkedListLines.add("Planes         : " + to_string(list.getTotalPlanes()));
+    linkedListLines.add("Est. Memory    : " + formatBytes(estimateLinkedListMemory(list)) + " (nodes only)");
 
-    vector<string> arrayLines;
-    arrayLines.push_back("Version        : Array (1D + 2D)");
-    arrayLines.push_back("Load Time      : " + formatMs(stats.arrayLoadMs));
-    arrayLines.push_back("Passengers     : " + to_string(getTotalPassengers()));
-    arrayLines.push_back("Active Planes  : " + to_string(activePlaneCount));
-    arrayLines.push_back("Est. Reserved  : " + formatBytes(estimateArrayReservedMemory()));
-    arrayLines.push_back("Est. Active    : " + formatBytes(estimateArrayActiveMemory()));
+    UILines arrayLines;
+    arrayLines.add("Version        : Array (1D + 2D)");
+    arrayLines.add("Load Time      : " + formatMs(stats.arrayLoadMs));
+    arrayLines.add("Passengers     : " + to_string(getTotalPassengers()));
+    arrayLines.add("Active Planes  : " + to_string(activePlaneCount));
+    arrayLines.add("Est. Reserved  : " + formatBytes(estimateArrayReservedMemory()));
+    arrayLines.add("Est. Active    : " + formatBytes(estimateArrayActiveMemory()));
 
     printBox("Linked List Performance", linkedListLines, boxWidth);
     cout << "\n";
@@ -251,14 +267,14 @@ bool isSeatInClassRange(const string& passengerClass, int seatRowIndex) {
     return seatRowIndex >= startRow && seatRowIndex <= endRow;
 }
 
-void renderSeatGrid(const vector<vector<char>>& grid, const string& title) {
+void renderSeatGrid(const SeatGrid& grid, const string& title) {
     cout << "\n" << title << "\n";
     cout << "   A   B   C   D   E   F\n";
     cout << "---------- First Class (Rows 1-3) ----------\n";
     for (int row = 0; row < 3; row++) {
         cout << (row + 1) << "   ";
         for (int col = 0; col < totalColumns; col++) {
-            cout << grid[row][col] << "   ";
+            cout << grid.grid[row][col] << "   ";
         }
         cout << "\n";
     }
@@ -270,7 +286,7 @@ void renderSeatGrid(const vector<vector<char>>& grid, const string& title) {
             cout << (row + 1) << "   ";
         }
         for (int col = 0; col < totalColumns; col++) {
-            cout << grid[row][col] << "   ";
+            cout << grid.grid[row][col] << "   ";
         }
         cout << "\n";
     }
@@ -278,7 +294,7 @@ void renderSeatGrid(const vector<vector<char>>& grid, const string& title) {
     for (int row = 10; row < 30; row++) {
         cout << (row + 1) << "  ";
         for (int col = 0; col < totalColumns; col++) {
-            cout << grid[row][col] << "   ";
+            cout << grid.grid[row][col] << "   ";
         }
         cout << "\n";
     }
@@ -287,13 +303,14 @@ void renderSeatGrid(const vector<vector<char>>& grid, const string& title) {
     cout << "Available Seat: O\n";
 }
 
-void renderManifest(const vector<PassengerNode>& passengers, const string& title) {
+void renderManifest(const PassengerManifest& manifest, const string& title) {
     cout << "\n" << title << "\n";
     cout << left << setw(10) << "ID" << setw(25) << "Name" << setw(8) << "Seat" << setw(12)
          << "Class" << "\n";
     cout << string(55, '-') << "\n";
 
-    for (const PassengerNode& passenger : passengers) {
+    for (int i = 0; i < manifest.count; i++) {
+        const PassengerNode& passenger = manifest.passengers[i];
         string seat = to_string(passenger.seatRow + 1) + PassengerconvertColumnIndexToChar(passenger.seatColumn);
         cout << left << setw(10) << passenger.passengerId
              << setw(25) << passenger.passengerName
@@ -302,10 +319,10 @@ void renderManifest(const vector<PassengerNode>& passengers, const string& title
     }
 }
 
-vector<PassengerNode> collectArrayManifest(int planeIndex) {
-    vector<PassengerNode> passengers;
+PassengerManifest collectArrayManifest(int planeIndex) {
+    PassengerManifest manifest;
     if (planeIndex < 0 || planeIndex >= activePlaneCount || !planes[planeIndex].isActive) {
-        return passengers;
+        return manifest;
     }
 
     for (int i = 0; i < planes[planeIndex].activePassengerCount; i++) {
@@ -314,56 +331,57 @@ vector<PassengerNode> collectArrayManifest(int planeIndex) {
             continue;
         }
 
-        PassengerNode node;
+        PassengerNode& node = manifest.passengers[manifest.count++];
         node.passengerId = arrayPassenger.passengerId;
         node.passengerName = arrayPassenger.passengerName;
         node.seatRow = arrayPassenger.seatRow;
         node.seatColumn = arrayPassenger.seatColumn;
         node.passengerClass = arrayPassenger.passengerClass;
         node.planeNum = arrayPassenger.planeNumber + 1;
-        passengers.push_back(node);
     }
 
-    return passengers;
+    return manifest;
 }
 
-vector<vector<char>> collectArrayGrid(int planeIndex) {
-    vector<vector<char>> grid(totalRows, vector<char>(totalColumns, 'O'));
+SeatGrid collectArrayGrid(int planeIndex) {
+    SeatGrid grid;
+    for (int r = 0; r < 30; r++) for (int c = 0; c < 6; c++) grid.grid[r][c] = 'O';
+
     if (planeIndex < 0 || planeIndex >= activePlaneCount || !planes[planeIndex].isActive) {
         return grid;
     }
 
     for (int row = 0; row < totalRows; row++) {
         for (int col = 0; col < totalColumns; col++) {
-            grid[row][col] = planes[planeIndex].seatingGrid[row][col];
+            grid.grid[row][col] = planes[planeIndex].seatingGrid[row][col];
         }
     }
     return grid;
 }
 
-vector<PassengerNode> collectLinkedListManifest(PassengerLinkedList& list, int planeNumber) {
+PassengerManifest collectLinkedListManifest(PassengerLinkedList& list, int planeNumber) {
     PassengerNode passengerList[30][6];
     list.getPassengersFromPlane(passengerList, planeNumber);
 
-    vector<PassengerNode> passengers;
+    PassengerManifest manifest;
     for (int row = 0; row < totalRows; row++) {
         for (int col = 0; col < totalColumns; col++) {
             if (passengerList[row][col].passengerName != "") {
-                passengers.push_back(passengerList[row][col]);
+                manifest.passengers[manifest.count++] = passengerList[row][col];
             }
         }
     }
-    return passengers;
+    return manifest;
 }
 
-vector<vector<char>> collectLinkedListGrid(PassengerLinkedList& list, int planeNumber) {
+SeatGrid collectLinkedListGrid(PassengerLinkedList& list, int planeNumber) {
     PassengerNode passengerList[30][6];
     list.getPassengersFromPlane(passengerList, planeNumber);
 
-    vector<vector<char>> grid(totalRows, vector<char>(totalColumns, 'O'));
+    SeatGrid grid;
     for (int row = 0; row < totalRows; row++) {
         for (int col = 0; col < totalColumns; col++) {
-            grid[row][col] = passengerList[row][col].passengerName.empty() ? 'O' : 'X';
+            grid.grid[row][col] = passengerList[row][col].passengerName.empty() ? 'O' : 'X';
         }
     }
     return grid;
@@ -376,7 +394,8 @@ ReservationResultView runLinkedListReservation(
     const string& passengerClass,
     bool hasPreferredSeat,
     int seatRow,
-    int seatColumn
+    int seatColumn,
+    int targetPlaneNumber = -1
 ) {
     ReservationResultView view{};
     auto start = chrono::high_resolution_clock::now();
@@ -387,7 +406,8 @@ ReservationResultView runLinkedListReservation(
         passengerClass,
         hasPreferredSeat,
         seatRow,
-        seatColumn
+        seatColumn,
+        targetPlaneNumber
     );
     auto end = chrono::high_resolution_clock::now();
 
@@ -409,7 +429,8 @@ ReservationResultView runArrayReservation(
     const string& passengerClass,
     bool hasPreferredSeat,
     int seatRow,
-    int seatColumn
+    int seatColumn,
+    int targetPlaneIndex = -1
 ) {
     ReservationResultView view{};
     view.passengerId = passengerId;
@@ -433,7 +454,21 @@ ReservationResultView runArrayReservation(
     int selectedRow = seatRow;
     int selectedColumn = seatColumn;
 
-    if (hasPreferredSeat) {
+    if (targetPlaneIndex >= 0) {
+        if (targetPlaneIndex < activePlaneCount && planes[targetPlaneIndex].isActive) {
+            if (isSeatAvailable(targetPlaneIndex, seatRow, seatColumn)) {
+                selectedPlane = targetPlaneIndex;
+            } else {
+                view.success = false;
+                view.message = "Seat is already occupied on Plane #" + to_string(targetPlaneIndex + 1);
+                return view;
+            }
+        } else {
+            view.success = false;
+            view.message = "Target plane is not active or out of range.";
+            return view;
+        }
+    } else if (hasPreferredSeat) {
         for (int i = 0; i < activePlaneCount; i++) {
             if (!planes[i].isActive) {
                 continue;
@@ -606,7 +641,7 @@ LookupResultView runArrayLookup(const string& passengerId) {
     return view;
 }
 
-void printOperationBox(const string& title, const vector<string>& lines) {
+void printOperationBox(const string& title, const UILines& lines) {
     const int boxWidth = 68;
     printBox(title, lines, boxWidth);
 }
@@ -637,118 +672,211 @@ string generateJointPassengerId(PassengerLinkedList& list) {
 }
 
 void handleJointReservation(PassengerLinkedList& list) {
-    clearScreen();
-    cout << "\n========================================\n";
+    while (true) {
+        clearScreen();
+        cout << "\n========================================\n";
     cout << "     RESERVATION (ARRAY + LINKED LIST)\n";
-    cout << "========================================\n\n";
+        cout << "========================================\n\n";
 
-    size_t linkedListMemBefore = estimateLinkedListMemory(list);
-    size_t arrayReservedBefore = estimateArrayReservedMemory();
-    size_t arrayActiveBefore = estimateArrayActiveMemory();
+        size_t linkedListMemBefore = estimateLinkedListMemory(list);
+        size_t arrayReservedBefore = estimateArrayReservedMemory();
+        size_t arrayActiveBefore = estimateArrayActiveMemory();
 
-    string passengerName;
-    while (true) {
-        cout << "Enter Passenger Name: ";
-        getline(cin, passengerName);
-        if (hasNonWhitespaceContent(passengerName)) {
+        // 1. Get passenger name
+        string passengerName;
+        while (true) {
+            cout << "Enter Passenger Name: ";
+            getline(cin, passengerName);
+            passengerName = trimWhitespace(passengerName);
+            if (!passengerName.empty()) break;
+            cout << "[ERROR] Name cannot be empty. Try again.\n";
+        }
+
+        // 2. Get passenger class
+        string passengerClass;
+        while (true) {
+            cout << "Enter Class (First/Business/Economy): ";
+            getline(cin, passengerClass);
+            string normalized;
+            if (normalizePassengerClass(passengerClass, normalized)) {
+                passengerClass = normalized;
+                break;
+            }
+            cout << "[ERROR] Invalid class. Must be First, Business, or Economy.\n";
+        }
+
+        // 3. Show available planes and select
+        int selectedPlaneIndex = -1;
+        while (true) {
+            cout << "\n========================================\n";
+            cout << "         AVAILABLE PLANES\n";
+            cout << "========================================\n\n";
+
+            bool hasAvailablePlane = false;
+            for (int i = 0; i < activePlaneCount; i++) {
+                if (planes[i].isActive) {
+                    int availableInClass = countAvailableSeatsInClass(i, passengerClass);
+                    if (availableInClass > 0) {
+                        int totalAvailable = SEATS_PER_PLANE - planes[i].activePassengerCount;
+                        cout << "Plane #" << (i + 1) << " - Total: " << totalAvailable << " seats available";
+                        cout << " (" << passengerClass << ": " << availableInClass << " seats) [V]\n";
+                        hasAvailablePlane = true;
+                    }
+                }
+            }
+
+            if (!hasAvailablePlane) {
+                cout << "\n[INFO] No planes with available " << passengerClass << " class seats.\n";
+                cout << "A new plane will be created.\n";
+                selectedPlaneIndex = createNewPlane();
+                if (selectedPlaneIndex == -1) {
+                    cout << "[ERROR] Cannot create more planes.\n";
+                    pauseForUserInput();
+                    return;
+                }
+                break;
+            }
+
+            cout << "\nEnter Plane Number (1-" << activePlaneCount << ") or 0 to go back: ";
+            int choice;
+            if (!(cin >> choice)) {
+                clearInputBuffer();
+                cout << "[ERROR] Invalid input. Enter a number.\n";
+                continue;
+            }
+            clearInputBuffer();
+
+            if (choice == 0) return;
+            selectedPlaneIndex = choice - 1;
+
+            if (selectedPlaneIndex < 0 || selectedPlaneIndex >= activePlaneCount || !planes[selectedPlaneIndex].isActive) {
+                cout << "[ERROR] Invalid plane number. Try again.\n";
+                continue;
+            }
+
+            if (countAvailableSeatsInClass(selectedPlaneIndex, passengerClass) == 0) {
+                cout << "[ERROR] " << passengerClass << " class is FULL on Plane #" << choice << ".\n";
+                continue;
+            }
             break;
         }
-        cout << "[ERROR] Name cannot be empty.\n";
-    }
 
-    string passengerClass;
-    while (true) {
-        cout << "Enter Class (First/Business/Economy): ";
-        getline(cin, passengerClass);
-        string normalized;
-        if (normalizePassengerClass(passengerClass, normalized)) {
-            passengerClass = normalized;
-            break;
+        // 4. Select seat
+        int seatRow = -1;
+        int seatColumn = -1;
+        bool seatSelected = false;
+
+        int minRow, maxRow;
+        getClassRowRange(passengerClass, minRow, maxRow);
+
+        while (!seatSelected) {
+            clearScreen();
+            cout << "\n========================================\n";
+            cout << "    PLANE #" << (selectedPlaneIndex + 1) << " SEATING GRID\n";
+            cout << "========================================\n\n";
+            
+            SeatGrid grid = collectArrayGrid(selectedPlaneIndex);
+            renderSeatGrid(grid, "Array System View (Plane #" + to_string(selectedPlaneIndex+1) + ")");
+
+            cout << "\nYour class: " << passengerClass << " (Rows " << (minRow + 1) << "-" << (maxRow + 1) << ")\n";
+
+            while (true) {
+                cout << "\nEnter Seat Row (" << (minRow + 1) << "-" << (maxRow + 1) << ") or 0 to choose different plane: ";
+                int rowInput;
+                if (!(cin >> rowInput)) {
+                    clearInputBuffer();
+                    cout << "[ERROR] Invalid input. Enter a number.\n";
+                    continue;
+                }
+                clearInputBuffer();
+
+                if (rowInput == 0) break; // Inner loop break to different plane choice
+                if (rowInput < (minRow + 1) || rowInput > (maxRow + 1)) {
+                    cout << "[ERROR] Row out of range for " << passengerClass << " class.\n";
+                    continue;
+                }
+                seatRow = rowInput - 1;
+                break;
+            }
+
+            if (seatRow == -1) break; // Back to plane selection
+
+            while (true) {
+                cout << "Enter Seat Column (A-F) or 0 to go back to row selection: ";
+                char colChar;
+                cin >> colChar;
+                clearInputBuffer();
+
+                if (colChar == '0') {
+                    seatRow = -1;
+                    break;
+                }
+                seatColumn = columnLetterToIndex(colChar);
+                if (seatColumn == -1) {
+                    cout << "[ERROR] Column must be between A and F.\n";
+                    continue;
+                }
+
+                if (!isSeatAvailable(selectedPlaneIndex, seatRow, seatColumn)) {
+                    cout << "[ERROR] Seat " << (seatRow + 1) << colChar << " is occupied.\n";
+                    continue;
+                }
+                seatSelected = true;
+                break;
+            }
         }
-        cout << "[ERROR] Invalid class.\n";
+
+        if (!seatSelected) continue; // Back to top of outer while loop (plane selection)
+
+        // 5. Execution
+        string passengerId = generateJointPassengerId(list);
+
+        ReservationResultView linkedListResult = runLinkedListReservation(
+            list, passengerId, passengerName, passengerClass, true, seatRow, seatColumn, selectedPlaneIndex + 1
+        );
+
+        ReservationResultView arrayResult = runArrayReservation(
+            passengerId, passengerName, passengerClass, true, seatRow, seatColumn, selectedPlaneIndex
+        );
+
+        size_t linkedListMemAfter = estimateLinkedListMemory(list);
+        size_t arrayReservedAfter = estimateArrayReservedMemory();
+        size_t arrayActiveAfter = estimateArrayActiveMemory();
+
+        if (linkedListResult.success) savePassengerCSV(list);
+        if (arrayResult.success) savePassengerDataToCSV();
+
+        // 6. Stats and Report
+        UILines llLines;
+        llLines.add("Status       : " + string(linkedListResult.success ? "SUCCESS" : "FAILED"));
+        if (!linkedListResult.success) llLines.add("Message      : " + linkedListResult.message);
+        llLines.add("Passenger ID : " + passengerId);
+        llLines.add("Name         : " + passengerName);
+        llLines.add("Plane        : " + to_string(linkedListResult.planeNumber));
+        llLines.add("Seat         : " + to_string(linkedListResult.seatRowIndex + 1) + convertColumnIndexToChar(linkedListResult.seatColumnIndex));
+        llLines.add("Est. Memory  : " + formatBytes(linkedListMemAfter) + " (" + formatBytes(linkedListMemBefore) + " before)");
+        llLines.add("Time         : " + formatMs(linkedListResult.elapsedMs));
+
+        UILines arrLines;
+        arrLines.add("Status       : " + string(arrayResult.success ? "SUCCESS" : "FAILED"));
+        if (!arrayResult.success) arrLines.add("Message      : " + arrayResult.message);
+        arrLines.add("Passenger ID : " + passengerId);
+        arrLines.add("Name         : " + passengerName);
+        arrLines.add("Plane        : " + to_string(arrayResult.planeNumber));
+        arrLines.add("Seat         : " + to_string(arrayResult.seatRowIndex + 1) + convertColumnIndexToChar(arrayResult.seatColumnIndex));
+        arrLines.add("Est. Reserved: " + formatBytes(arrayReservedAfter) + " (" + formatBytes(arrayReservedBefore) + " before)");
+        arrLines.add("Est. Active  : " + formatBytes(arrayActiveAfter) + " (" + formatBytes(arrayActiveBefore) + " before)");
+        arrLines.add("Time         : " + formatMs(arrayResult.elapsedMs));
+
+        cout << "\n";
+        printOperationBox("Linked List Result", llLines);
+        cout << "\n";
+        printOperationBox("Array Result", arrLines);
+        cout << "\n";
+        
+        pauseForUserInput();
+        break;
     }
-
-    bool hasPreferredSeat = readYesNo("Preferred seat? (y/n): ");
-    int preferredRow = -1;
-    int preferredColumn = -1;
-    if (hasPreferredSeat) {
-        readSeatPreference(preferredRow, preferredColumn);
-    }
-
-    string passengerId = generateJointPassengerId(list);
-
-    ReservationResultView linkedListResult = runLinkedListReservation(
-        list,
-        passengerId,
-        passengerName,
-        passengerClass,
-        hasPreferredSeat,
-        preferredRow,
-        preferredColumn
-    );
-
-    ReservationResultView arrayResult = runArrayReservation(
-        passengerId,
-        passengerName,
-        passengerClass,
-        hasPreferredSeat,
-        preferredRow,
-        preferredColumn
-    );
-
-    size_t linkedListMemAfter = estimateLinkedListMemory(list);
-    size_t arrayReservedAfter = estimateArrayReservedMemory();
-    size_t arrayActiveAfter = estimateArrayActiveMemory();
-
-    if (linkedListResult.success) {
-        savePassengerCSV(list);
-    }
-    if (arrayResult.success) {
-        savePassengerDataToCSV();
-    }
-
-    vector<string> linkedListLines;
-    linkedListLines.push_back("Status       : " + string(linkedListResult.success ? "SUCCESS" : "FAILED"));
-    if (!linkedListResult.success) {
-        linkedListLines.push_back("Message      : " + linkedListResult.message);
-    }
-    linkedListLines.push_back("Passenger ID : " + passengerId);
-    linkedListLines.push_back("Name         : " + passengerName);
-    linkedListLines.push_back("Class        : " + passengerClass);
-    if (linkedListResult.success) {
-        linkedListLines.push_back("Plane        : " + to_string(linkedListResult.planeNumber));
-        linkedListLines.push_back("Seat         : " + to_string(linkedListResult.seatRowIndex + 1) +
-                                  convertColumnIndexToChar(linkedListResult.seatColumnIndex));
-    }
-    linkedListLines.push_back("Est. Memory  : " + formatBytes(linkedListMemAfter) +
-                              " (" + formatBytes(linkedListMemBefore) + " before)");
-    linkedListLines.push_back("Time         : " + formatMs(linkedListResult.elapsedMs));
-
-    vector<string> arrayLines;
-    arrayLines.push_back("Status       : " + string(arrayResult.success ? "SUCCESS" : "FAILED"));
-    if (!arrayResult.success) {
-        arrayLines.push_back("Message      : " + arrayResult.message);
-    }
-    arrayLines.push_back("Passenger ID : " + passengerId);
-    arrayLines.push_back("Name         : " + passengerName);
-    arrayLines.push_back("Class        : " + passengerClass);
-    if (arrayResult.success) {
-        arrayLines.push_back("Plane        : " + to_string(arrayResult.planeNumber));
-        arrayLines.push_back("Seat         : " + to_string(arrayResult.seatRowIndex + 1) +
-                              convertColumnIndexToChar(arrayResult.seatColumnIndex));
-    }
-    arrayLines.push_back("Est. Reserved: " + formatBytes(arrayReservedAfter) +
-                         " (" + formatBytes(arrayReservedBefore) + " before)");
-    arrayLines.push_back("Est. Active  : " + formatBytes(arrayActiveAfter) +
-                         " (" + formatBytes(arrayActiveBefore) + " before)");
-    arrayLines.push_back("Time         : " + formatMs(arrayResult.elapsedMs));
-
-    cout << "\n";
-    printOperationBox("Linked List Result", linkedListLines);
-    cout << "\n";
-    printOperationBox("Array Result", arrayLines);
-    cout << "\n";
-    pauseForUserInput();
 }
 
 void handleJointCancellation(PassengerLinkedList& list) {
@@ -779,41 +907,41 @@ void handleJointCancellation(PassengerLinkedList& list) {
         savePassengerDataToCSV();
     }
 
-    vector<string> linkedListLines;
-    linkedListLines.push_back("Status       : " + string(linkedListResult.success ? "SUCCESS" : "FAILED"));
+    UILines linkedListLines;
+    linkedListLines.add("Status       : " + string(linkedListResult.success ? "SUCCESS" : "FAILED"));
     if (!linkedListResult.success) {
-        linkedListLines.push_back("Message      : " + linkedListResult.message);
+        linkedListLines.add("Message      : " + linkedListResult.message);
     }
-    linkedListLines.push_back("Passenger ID : " + passengerId);
+    linkedListLines.add("Passenger ID : " + passengerId);
     if (linkedListResult.success) {
-        linkedListLines.push_back("Name         : " + linkedListResult.passengerName);
-        linkedListLines.push_back("Class        : " + linkedListResult.passengerClass);
-        linkedListLines.push_back("Plane        : " + to_string(linkedListResult.planeNumber));
-        linkedListLines.push_back("Seat         : " + to_string(linkedListResult.seatRowIndex + 1) +
+        linkedListLines.add("Name         : " + linkedListResult.passengerName);
+        linkedListLines.add("Class        : " + linkedListResult.passengerClass);
+        linkedListLines.add("Plane        : " + to_string(linkedListResult.planeNumber));
+        linkedListLines.add("Seat         : " + to_string(linkedListResult.seatRowIndex + 1) +
                                   convertColumnIndexToChar(linkedListResult.seatColumnIndex));
     }
-    linkedListLines.push_back("Est. Memory  : " + formatBytes(linkedListMemAfter) +
+    linkedListLines.add("Est. Memory  : " + formatBytes(linkedListMemAfter) +
                               " (" + formatBytes(linkedListMemBefore) + " before)");
-    linkedListLines.push_back("Time         : " + formatMs(linkedListResult.elapsedMs));
+    linkedListLines.add("Time         : " + formatMs(linkedListResult.elapsedMs));
 
-    vector<string> arrayLines;
-    arrayLines.push_back("Status       : " + string(arrayResult.success ? "SUCCESS" : "FAILED"));
+    UILines arrayLines;
+    arrayLines.add("Status       : " + string(arrayResult.success ? "SUCCESS" : "FAILED"));
     if (!arrayResult.success) {
-        arrayLines.push_back("Message      : " + arrayResult.message);
+        arrayLines.add("Message      : " + arrayResult.message);
     }
-    arrayLines.push_back("Passenger ID : " + passengerId);
+    arrayLines.add("Passenger ID : " + passengerId);
     if (arrayResult.success) {
-        arrayLines.push_back("Name         : " + arrayResult.passengerName);
-        arrayLines.push_back("Class        : " + arrayResult.passengerClass);
-        arrayLines.push_back("Plane        : " + to_string(arrayResult.planeNumber));
-        arrayLines.push_back("Seat         : " + to_string(arrayResult.seatRowIndex + 1) +
+        arrayLines.add("Name         : " + arrayResult.passengerName);
+        arrayLines.add("Class        : " + arrayResult.passengerClass);
+        arrayLines.add("Plane        : " + to_string(arrayResult.planeNumber));
+        arrayLines.add("Seat         : " + to_string(arrayResult.seatRowIndex + 1) +
                               convertColumnIndexToChar(arrayResult.seatColumnIndex));
     }
-    arrayLines.push_back("Est. Reserved: " + formatBytes(arrayReservedAfter) +
+    arrayLines.add("Est. Reserved: " + formatBytes(arrayReservedAfter) +
                          " (" + formatBytes(arrayReservedBefore) + " before)");
-    arrayLines.push_back("Est. Active  : " + formatBytes(arrayActiveAfter) +
+    arrayLines.add("Est. Active  : " + formatBytes(arrayActiveAfter) +
                          " (" + formatBytes(arrayActiveBefore) + " before)");
-    arrayLines.push_back("Time         : " + formatMs(arrayResult.elapsedMs));
+    arrayLines.add("Time         : " + formatMs(arrayResult.elapsedMs));
 
     cout << "\n";
     printOperationBox("Linked List Result", linkedListLines);
@@ -836,29 +964,29 @@ void handleJointLookup(PassengerLinkedList& list) {
     LookupResultView linkedListResult = runLinkedListLookup(list, passengerId);
     LookupResultView arrayResult = runArrayLookup(passengerId);
 
-    vector<string> linkedListLines;
-    linkedListLines.push_back("Status       : " + string(linkedListResult.found ? "FOUND" : "NOT FOUND"));
-    linkedListLines.push_back("Passenger ID : " + passengerId);
+    UILines linkedListLines;
+    linkedListLines.add("Status       : " + string(linkedListResult.found ? "FOUND" : "NOT FOUND"));
+    linkedListLines.add("Passenger ID : " + passengerId);
     if (linkedListResult.found) {
-        linkedListLines.push_back("Name         : " + linkedListResult.passengerName);
-        linkedListLines.push_back("Class        : " + linkedListResult.passengerClass);
-        linkedListLines.push_back("Plane        : " + to_string(linkedListResult.planeNumber));
-        linkedListLines.push_back("Seat         : " + to_string(linkedListResult.seatRowIndex + 1) +
+        linkedListLines.add("Name         : " + linkedListResult.passengerName);
+        linkedListLines.add("Class        : " + linkedListResult.passengerClass);
+        linkedListLines.add("Plane        : " + to_string(linkedListResult.planeNumber));
+        linkedListLines.add("Seat         : " + to_string(linkedListResult.seatRowIndex + 1) +
                                   PassengerconvertColumnIndexToChar(linkedListResult.seatColumnIndex));
     }
-    linkedListLines.push_back("Time         : " + formatMs(linkedListResult.elapsedMs));
+    linkedListLines.add("Time         : " + formatMs(linkedListResult.elapsedMs));
 
-    vector<string> arrayLines;
-    arrayLines.push_back("Status       : " + string(arrayResult.found ? "FOUND" : "NOT FOUND"));
-    arrayLines.push_back("Passenger ID : " + passengerId);
+    UILines arrayLines;
+    arrayLines.add("Status       : " + string(arrayResult.found ? "FOUND" : "NOT FOUND"));
+    arrayLines.add("Passenger ID : " + passengerId);
     if (arrayResult.found) {
-        arrayLines.push_back("Name         : " + arrayResult.passengerName);
-        arrayLines.push_back("Class        : " + arrayResult.passengerClass);
-        arrayLines.push_back("Plane        : " + to_string(arrayResult.planeNumber));
-        arrayLines.push_back("Seat         : " + to_string(arrayResult.seatRowIndex + 1) +
-                              convertColumnIndexToChar(arrayResult.seatColumnIndex));
+        arrayLines.add("Name         : " + arrayResult.passengerName);
+        arrayLines.add("Class        : " + arrayResult.passengerClass);
+        arrayLines.add("Plane        : " + to_string(arrayResult.planeNumber));
+        arrayLines.add("Seat         : " + to_string(arrayResult.seatRowIndex + 1) +
+                               convertColumnIndexToChar(arrayResult.seatColumnIndex));
     }
-    arrayLines.push_back("Time         : " + formatMs(arrayResult.elapsedMs));
+    arrayLines.add("Time         : " + formatMs(arrayResult.elapsedMs));
 
     cout << "\n";
     printOperationBox("Linked List Result", linkedListLines);
@@ -912,10 +1040,10 @@ void handleJointManifest(PassengerLinkedList& list) {
     double linkedListMs = -1.0;
     double arrayMs = -1.0;
 
-    vector<vector<char>> linkedListGrid;
-    vector<PassengerNode> linkedListManifest;
-    vector<vector<char>> arrayGrid;
-    vector<PassengerNode> arrayManifest;
+    SeatGrid linkedListGrid;
+    PassengerManifest linkedListManifest;
+    SeatGrid arrayGrid;
+    PassengerManifest arrayManifest;
 
     if (linkedListValid) {
         auto start = chrono::high_resolution_clock::now();

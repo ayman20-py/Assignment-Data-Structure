@@ -33,7 +33,7 @@ using namespace std;
    =========================================================== */
 
 // System constants
-const string csvFilePath = "Source\\LinkedList\\FlightPassengerDataLinkedList.csv";
+const string csvFilePath = "C:\\Users\\User\\Dev\\C++\\Assignment-Data-Structure\\Source\\LinkedList\\FlightPassengerDataLinkedList.csv";
 const int totalRows = 30;
 const int totalColumns = 6;
 
@@ -537,7 +537,8 @@ ReservationInsertionResult insertPassengerReservation(
     const string& passengerClassInput,
     bool hasPreferredSeat,
     int preferredSeatRowIndex,
-    int preferredSeatColumnIndex
+    int preferredSeatColumnIndex,
+    int forcedPlaneNumber = -1
 ) {
     ReservationInsertionResult result{};
     result.isSuccessful = false;
@@ -573,6 +574,32 @@ ReservationInsertionResult insertPassengerReservation(
     int totalPlanes = linkedList.getTotalPlanes();
     if (totalPlanes < 1) {
         totalPlanes = 1;
+    }
+
+    // Force targeting a specific plane (used by interactive reservation)
+    if (forcedPlaneNumber > 0) {
+        if (!isSeatIndexValid(preferredSeatRowIndex, preferredSeatColumnIndex)) {
+            result.errorMessage = "Seat row or column is out of range.";
+            return result;
+        }
+        if (preferredSeatRowIndex < startRowIndex || preferredSeatRowIndex > endRowIndex) {
+            result.errorMessage = "Selected seat does not match the requested class.";
+            return result;
+        }
+        if (linkedList.isSeatOccupied(preferredSeatRowIndex, preferredSeatColumnIndex, forcedPlaneNumber)) {
+            result.errorMessage = "Seat is already occupied on Plane #" + to_string(forcedPlaneNumber);
+            return result;
+        }
+
+        linkedList.init(passengerId, passengerName, preferredSeatRowIndex, preferredSeatColumnIndex, forcedPlaneNumber, normalizedClass);
+        if (forcedPlaneNumber > totalPlanes) {
+            linkedList.setTotalPlanes(forcedPlaneNumber);
+        }
+        result.isSuccessful = true;
+        result.planeNumber = forcedPlaneNumber;
+        result.seatRowIndex = preferredSeatRowIndex;
+        result.seatColumnIndex = preferredSeatColumnIndex;
+        return result;
     }
 
     if (hasPreferredSeat) {
