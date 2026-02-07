@@ -16,7 +16,6 @@ CODE ORGANIZATION:
 - Section 5: TP083605 - Seat Lookup Functions (Menu 3)
 - Section 6: TP083605 - Manifest Report Functions (Menu 4)
 - Section 7: TP083605 - Seat Report Functions (Menu 5)
-- Section 8: Main Menu & Program Entry
 ===============================================================================
 */
 
@@ -28,7 +27,6 @@ CODE ORGANIZATION:
 #include <algorithm>
 #include <cctype>
 #include <vector>
-
 
 using namespace std;
 
@@ -45,7 +43,7 @@ const char AVAILABLE_SEAT = 'O';
 const char OCCUPIED_SEAT = 'X';
 
 const string COLUMN_LABELS = "ABCDEF";
-const string CSV_FILE_PATH = "../Dataset/flight_passenger_data.csv.csv";
+const string CSV_FILE_PATH = "Dataset/flight_passenger_data.csv.csv";
 
 // ============================================================================
 // DATA STRUCTURES (SHARED BY BOTH TEAM MEMBERS)
@@ -684,7 +682,7 @@ bool insertReservation(const string &passengerId, const string &passengerName,
     // Only show success message if called from manual reservation (not CSV load)
     // We detect this by checking if we're in the middle of bulk loading
     static bool bulkLoading = false;
-    if (!bulkLoading)
+    if (bulkLoading)
     {
         cout << "\n[SUCCESS] Reservation added successfully!\n";
         cout << "Passenger ID: " << passengerId << "\n";
@@ -1663,6 +1661,7 @@ void displayMainMenu()
     cout << "Enter your choice (1-6): ";
 }
 
+/*
 int main()
 {
     cout << "========================================\n";
@@ -1722,3 +1721,4 @@ int main()
 
     return 0;
 }
+*/
