@@ -1,4 +1,9 @@
-.\vscode
-
-# Exclude all the .exe files
-**/*.exe
+*.exe
+*.ilk
+*.obj
+*.pdb
+*.exp
+*.lib
+.DS_Store
+.vscode/
+vc140.pdb
