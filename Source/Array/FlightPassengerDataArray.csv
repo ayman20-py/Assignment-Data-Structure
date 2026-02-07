@@ -8682,7 +8682,6 @@ PassengerID,Name,SeatRow,SeatColumn,Class
 109933,Ryan Jones,16,C,Economy
 109989,Jack Johnson,6,F,Business
 108488,Alice Wilson,14,F,Economy
-110001,Arthur Morgan,1,A,First
 106029,Ryan Jackson,30,B,Economy
 106103,Carol Harris,24,D,Economy
 106154,Jack Martin,29,F,Economy
@@ -9203,6 +9202,7 @@ PassengerID,Name,SeatRow,SeatColumn,Class
 109975,Quinn Anderson,24,A,Economy
 109984,Eve Thomas,17,D,Economy
 109264,Ryan Jackson,14,F,Economy
+110002,John Marston,29,A,Economy
 106697,Eve Williams,24,D,Economy
 106700,Alice Miller,29,F,Economy
 107069,Olivia Harris,30,E,Economy

@@ -550,12 +550,18 @@ bool savePassengerDataToCSV()
 // 1.7 Display All Passengers (Helper for Cancellation)
 // ────────────────────────────────────────────────────────────────────────────
 
-void displayAllPassengersForCancellation()
+void displayGlobalPassengerList(const string& filterClass = "")
 {
     clearScreen();
-    cout << "\n========================================\n";
-    cout << "    ALL PASSENGERS (ALL PLANES)\n";
-    cout << "========================================\n\n";
+    string title = "========================================\n"
+                   "    ALL PASSENGERS (ALL PLANES)\n"
+                   "========================================\n";
+    if (!filterClass.empty()) {
+        title = "========================================\n"
+                "    ALL " + filterClass + " PASSENGERS\n"
+                "========================================\n";
+    }
+    cout << "\n" << title << "\n";
 
     int totalCount = 0;
     int displayCount = 0;
@@ -570,6 +576,8 @@ void displayAllPassengersForCancellation()
          << "\n";
     cout << string(65, '-') << "\n";
 
+    string filterUpper = toUpperCase(filterClass);
+
     // Traverse 1D array of planes
     for (int p = 0; p < activePlaneCount; p++)
     {
@@ -582,31 +590,22 @@ void displayAllPassengersForCancellation()
             if (planes[p].passengers[i].isActive)
             {
                 Passenger &pass = planes[p].passengers[i];
-                string seat = to_string(pass.seatRow + 1) + columnIndexToLetter(pass.seatColumn);
+                string classUpper = toUpperCase(pass.passengerClass);
 
-                cout << left
-                     << setw(5) << (++displayCount)
-                     << setw(12) << pass.passengerId
-                     << setw(22) << pass.passengerName.substr(0, 20)
-                     << setw(8) << ("#" + to_string(p + 1))
-                     << setw(8) << seat
-                     << setw(10) << pass.passengerClass
-                     << "\n";
-
-                totalCount++;
-
-                if (displayCount % 20 == 0)
+                if (filterClass.empty() || classUpper == filterUpper)
                 {
-                    cout << "\n[Press Enter to continue or 'q' to stop viewing...]";
-                    string input;
-                    getline(cin, input);
-                    if (!input.empty() && (input[0] == 'q' || input[0] == 'Q'))
-                    {
-                        cout << "\n"
-                             << string(65, '=') << "\n";
-                        cout << "Viewing stopped. Total passengers displayed: " << displayCount << "\n";
-                        return;
-                    }
+                    string seat = to_string(pass.seatRow + 1) + columnIndexToLetter(pass.seatColumn);
+
+                    cout << left
+                         << setw(5) << (++displayCount)
+                         << setw(12) << pass.passengerId
+                         << setw(22) << pass.passengerName.substr(0, 20)
+                         << setw(8) << ("#" + to_string(p + 1))
+                         << setw(8) << seat
+                         << setw(10) << pass.passengerClass
+                         << "\n";
+
+                    totalCount++;
                 }
             }
         }
@@ -617,6 +616,14 @@ void displayAllPassengersForCancellation()
     cout << "Total Passengers: " << totalCount << "\n";
     cout << "Total Active Planes: " << activePlaneCount << "\n";
     cout << string(65, '=') << "\n";
+}
+
+void displayAllPassengersForCancellation() {
+    displayGlobalPassengerList("");
+}
+
+void displayAllPassengers() {
+    displayGlobalPassengerList("");
 }
 
 // ============================================================================

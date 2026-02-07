@@ -131,6 +131,10 @@ public:
         totalPlanes = 0;
     }
 
+    PassengerNode* getHead() const {
+        return head;
+    }
+
     void init(string id, string name, int row, int column, int planeNum, string passengerClassType = "Economy") {
         PassengerNode* newNode = new PassengerNode(id, name, row, column, planeNum, passengerClassType);
 
@@ -182,22 +186,50 @@ public:
         return false;
     }
 
-    // Display all the information about the passengers in the whole dataset
-    void displayAllPassengers() {
+    // Display all the information about the passengers in the whole dataset with optional class filter
+    void displayAllPassengersFiltered(const string& filterClass = "") {
         PassengerNode* current = head;
+        string filterUpper = filterClass;
+        transform(filterUpper.begin(), filterUpper.end(), filterUpper.begin(), ::toupper);
 
-        cout << "==========PASSENGER MANIFEST==========" << endl;
-        cout << "ID        Name                     Seat     Class" << endl;
-        while (current != nullptr) {
-            cout << current->passengerId << "    ";
-            cout << current->passengerName << string(25 - current->passengerName.length(), ' ');
-            cout << (current->seatRow+ 1)<< PassengerconvertColumnIndexToChar(current->seatColumn) << string(8 - to_string(current->seatRow).length(), ' ');
-            cout << current->passengerClass;
-            cout << endl;
-
-            current = current -> next;
+        string title = "========== PASSENGER MANIFEST (ALL) ==========";
+        if (!filterClass.empty()) {
+            title = "========== PASSENGER MANIFEST (" + filterClass + " ONLY) ==========";
         }
 
+        cout << "\n" << title << endl;
+        cout << left << setw(10) << "ID" << setw(25) << "Name" << setw(8) << "Plane" << setw(8) << "Seat" << setw(12) << "Class" << endl;
+        cout << string(63, '-') << endl;
+
+        int count = 0;
+        while (current != nullptr) {
+            string currentClassUpper = current->passengerClass;
+            transform(currentClassUpper.begin(), currentClassUpper.end(), currentClassUpper.begin(), ::toupper);
+
+            if (filterClass.empty() || currentClassUpper == filterUpper) {
+                cout << left << setw(10) << current->passengerId
+                     << setw(25) << current->passengerName.substr(0, 23)
+                     << setw(8) << ("#" + to_string(current->planeNum))
+                     << setw(8) << (to_string(current->seatRow + 1) + PassengerconvertColumnIndexToChar(current->seatColumn))
+                     << setw(12) << current->passengerClass << endl;
+                count++;
+            }
+            current = current->next;
+
+            if (count > 0 && count % 20 == 0 && (filterClass.empty() || current != nullptr)) {
+                // Pause if needed, but for performance timing we might want to avoid interactive pauses in the runner itself
+                // However, for user display, we should keep it readable.
+                // For joint display, Array will handle the output.
+            }
+        }
+
+        cout << string(63, '-') << endl;
+        cout << "Total Passengers Displayed: " << count << endl;
+        cout << string(63, '=') << endl;
+    }
+
+    void displayAllPassengers() {
+        displayAllPassengersFiltered("");
     }
 
     // This function will return a 2D array containing the passengers in a specific plane number

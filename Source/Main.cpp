@@ -996,6 +996,103 @@ void handleJointLookup(PassengerLinkedList& list) {
     pauseForUserInput();
 }
 
+// --- Global Passenger List Performance Runners ---
+
+double runLinkedListGlobalList(PassengerLinkedList& list, const string& filterClass) {
+    auto start = chrono::high_resolution_clock::now();
+    
+    // Performance timing: traverse the list silently
+    PassengerNode* current = list.getHead();
+    string filterUpper = toUpperCase(filterClass);
+    int count = 0;
+    while (current != nullptr) {
+        string classUpper = toUpperCase(current->passengerClass);
+        if (filterClass.empty() || classUpper == filterUpper) {
+            count++;
+        }
+        current = current->next;
+    }
+    
+    auto end = chrono::high_resolution_clock::now();
+    return chrono::duration<double, milli>(end - start).count();
+}
+
+double runArrayGlobalList(const string& filterClass, bool silent) {
+    auto start = chrono::high_resolution_clock::now();
+    
+    if (!silent) {
+        displayGlobalPassengerList(filterClass);
+    } else {
+        // Silent traversal for timing
+        string filterUpper = toUpperCase(filterClass);
+        int count = 0;
+        for (int p = 0; p < activePlaneCount; p++) {
+            if (!planes[p].isActive) continue;
+            for (int i = 0; i < planes[p].activePassengerCount; i++) {
+                if (planes[p].passengers[i].isActive) {
+                    if (filterClass.empty() || toUpperCase(planes[p].passengers[i].passengerClass) == filterUpper) {
+                        count++;
+                    }
+                }
+            }
+        }
+    }
+    
+    auto end = chrono::high_resolution_clock::now();
+    return chrono::duration<double, milli>(end - start).count();
+}
+
+void handleJointAllPassengers(PassengerLinkedList& list) {
+    clearScreen();
+    cout << "\n========================================\n";
+    cout << "      GLOBAL PASSENGER LIST\n";
+    cout << "========================================\n\n";
+
+    cout << "1. Display All Passengers' Data\n";
+    cout << "2. Filter by Class (First/Business/Economy)\n";
+    cout << "0. Back to Main Menu\n\n";
+    cout << "Enter choice: ";
+
+    int choice;
+    if (!(cin >> choice)) {
+        clearInputBuffer();
+        return;
+    }
+    clearInputBuffer();
+
+    if (choice == 0) return;
+
+    string filterClass = "";
+    if (choice == 2) {
+        while (true) {
+            cout << "Enter Class to filter (First/Business/Economy): ";
+            getline(cin, filterClass);
+            string normalized;
+            if (normalizePassengerClass(filterClass, normalized)) {
+                filterClass = normalized;
+                break;
+            }
+            cout << "[ERROR] Invalid class.\n";
+        }
+    }
+
+    // 1. Get pure performance timing for both systems (silent)
+    double llTime = runLinkedListGlobalList(list, filterClass);
+    double arrTime = runArrayGlobalList(filterClass, true);
+
+    // 2. Perform the actual display once (using Array system)
+    displayGlobalPassengerList(filterClass);
+
+    UILines stats;
+    stats.add("Linked List Search Time : " + formatMs(llTime));
+    stats.add("Array Search Time       : " + formatMs(arrTime));
+
+    cout << "\n";
+    printOperationBox("Search Performance (Global Manifest)", stats);
+    cout << "\n";
+    pauseForUserInput();
+}
+
 void handleJointManifest(PassengerLinkedList& list) {
     clearScreen();
     cout << "\n========================================\n";
@@ -1102,8 +1199,9 @@ void printMainMenu() {
     cout << "2. Cancellation (Deletion)\n";
     cout << "3. Seat Lookup (Search)\n";
     cout << "4. Manifest & Seat Report\n";
-    cout << "5. Refresh Performance Stats\n";
-    cout << "6. Exit\n";
+    cout << "5. Global Passenger List (All Planes)\n";
+    cout << "6. Refresh Performance Stats\n";
+    cout << "7. Exit\n";
     cout << "----------------------------------------\n";
     cout << "Enter choice: ";
 }
@@ -1138,9 +1236,12 @@ int main() {
                 handleJointManifest(passengerLinkedList);
                 break;
             case 5:
-                stats = loadAllData(passengerLinkedList);
+                handleJointAllPassengers(passengerLinkedList);
                 break;
             case 6:
+                stats = loadAllData(passengerLinkedList);
+                break;
+            case 7:
                 running = false;
                 break;
             default:
