@@ -8387,7 +8387,6 @@ PassengerID,Name,SeatRow,SeatColumn,Class
 108385,Paul White,22,A,Economy
 108386,Paul Taylor,30,B,Economy
 108387,Jack Smith,18,D,Economy
-108388,Kate Smith,14,F,Economy
 108389,Quinn Wilson,6,E,Business
 108390,David Davis,20,A,Economy
 108391,Frank Jackson,20,C,Economy
@@ -9999,3 +9998,4 @@ PassengerID,Name,SeatRow,SeatColumn,Class
 109997,Grace Williams,2,A,First
 109998,Eve Jones,12,F,Economy
 109999,Grace Davis,2,A,First
+110001,Arthur Morgan,1,A,First
