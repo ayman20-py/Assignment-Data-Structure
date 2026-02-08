@@ -550,18 +550,21 @@ bool savePassengerDataToCSV()
 // 1.7 Display All Passengers (Helper for Cancellation)
 // ────────────────────────────────────────────────────────────────────────────
 
-void displayGlobalPassengerList(const string& filterClass = "")
+void displayGlobalPassengerList(const string &filterClass = "")
 {
     clearScreen();
     string title = "========================================\n"
                    "    ALL PASSENGERS (ALL PLANES)\n"
                    "========================================\n";
-    if (!filterClass.empty()) {
+    if (!filterClass.empty())
+    {
         title = "========================================\n"
-                "    ALL " + filterClass + " PASSENGERS\n"
-                "========================================\n";
+                "    ALL " +
+                filterClass + " PASSENGERS\n"
+                              "========================================\n";
     }
-    cout << "\n" << title << "\n";
+    cout << "\n"
+         << title << "\n";
 
     int totalCount = 0;
     int displayCount = 0;
@@ -618,11 +621,13 @@ void displayGlobalPassengerList(const string& filterClass = "")
     cout << string(65, '=') << "\n";
 }
 
-void displayAllPassengersForCancellation() {
+void displayAllPassengersForCancellation()
+{
     displayGlobalPassengerList("");
 }
 
-void displayAllPassengers() {
+void displayAllPassengers()
+{
     displayGlobalPassengerList("");
 }
 
@@ -1200,7 +1205,6 @@ void handleSeatLookup()
     pauseForUserInput();
 }
 
-
 // ============================================================================
 // SECTION 6: TP083605 - MANIFEST REPORT FUNCTIONS (MENU 4)
 // ============================================================================
@@ -1529,7 +1533,7 @@ void displaySeatingChartForPlane(int planeIndex)
     {
         cout << "[ERROR] Invalid plane number.\n";
         pauseForUserInput(); // Wait so the user can read the error
-        return; // Stop the function if plane is invalid
+        return;              // Stop the function if plane is invalid
     }
 
     // Print the seating chart title
@@ -1650,7 +1654,7 @@ void handleSeatReport()
 void displayMainMenu()
 {
     cout << "\n========================================\n";
-    cout << "  MULTI-PLANE RESERVATION SYSTEM\n";
+    cout << "  PLANE RESERVATION SYSTEM\n";
     cout << "========================================\n";
     cout << "  TP079279: Menu 1 & 2 (Reservation & Cancellation)\n";
     cout << "  TP083605: Menu 3, 4 & 5 (Lookup, Manifest, Seat Report)\n";
